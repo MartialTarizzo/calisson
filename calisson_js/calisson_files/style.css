@@ -1,0 +1,56 @@
+body {
+    text-align: center;
+}
+
+#controle {
+    font-size: 20px;
+}
+
+input {
+    font-size: 20px;
+    display: inline;
+    border-radius: 10px;
+    padding: 10px;
+
+}
+
+input[type=number] {
+    width: 60px;
+}
+
+#btreset,
+#genurl,
+#btmode,
+#termine,
+#terminedl {
+    font-size: 30px;
+    display: inline;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    background-color: cornflowerblue;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+
+.explication {
+    font-style: italic;
+    margin: 20px;
+}
+
+#messagediv {
+    position: fixed;
+    margin: auto;
+    width: 50%;
+    top: 30vh;
+    background: aliceblue;
+    left: 25vw;
+    padding: 40px;
+    border-radius: 10px;
+}
+
+#canvasbis {
+    display: none;
+}

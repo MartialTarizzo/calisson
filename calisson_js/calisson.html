@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!-- saved from url=(0120)https://mathix.org/calisson/index.html?tab=fffssfsffsfsftssfsssfsfffttfsffsssftfsftsffffsfssffsftssfsffftfsffssfsfs33301 -->
+<html xmlns:og="http://ogp.me/ns#"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    
+    <link rel="stylesheet" href="./calisson_files/style.css">
+    <title>calisson</title>
+    <script defer="" language="JavaScript" src="./calisson_files/javascript.js"></script>
+    <script src="./calisson_files/filesaver.js" defer=""></script>
+    <script src="./calisson_files/canvastoblob.js" defer=""></script>
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@durandarno">
+    <meta name="twitter:title" content="Le Jeu du Calisson">
+    <meta name="twitter:description" content="J&#39;ai terminé ma grille">
+    <meta name="twitter:image" content="https://mathix.org/calisson/calisson.jpg">
+
+    <meta property="og:type" content="website">
+    <meta property="go:url" content="https://mathix.org/calisson/index.html">
+    <meta property="go:title" content="Le Jeu du Calisson">
+    <meta property="go:description" content="J&#39;ai terminé ma grille">
+    <meta property="go:image" content="https://mathix.org/calisson/calisson.jpg">
+    <meta property="og:site_name" content="Le Jeu du Calisson">
+
+</head>
+
+
+
+<body>
+
+    <div id="controle">
+        <span id="sptaille" style="display: none;">Taille :
+            <input type="number" id="taille" value="3" min="2" step="1" onchange="rafraichit()" width="30px"></span>
+
+        <span id="splongueur">Zoom <input type="number" id="longueur" value="80" min="30" step="1" onchange="rafraichitlongueur()" width="30px"></span>
+        <span id="chronospan">Chrono : <span id="chrono">27 s</span></span>
+        <span id="losange">Losange(s) utilisé(s) : <span id="nblosange">0</span></span>
+    </div>
+
+    <canvas id="canvas" width="425" height="490" style="cursor: pointer;"></canvas>
+    <canvas id="canvasbis" width="30" height="30"></canvas>
+
+    <br><button id="btreset" onclick="reset()">Reset</button>
+    <button id="btmode" onclick="changemode()" style="display: none;">Mode arête</button>
+    <button id="genurl" onclick="genereurl()" style="display: none;">Génère lien</button>
+    <button id="termine" onclick="termine()">Ma grille est terminée</button>
+    <button id="terminedl" onclick="dl()" style="display: none;">Télécharger ma solution</button>
+
+    <div class="explication" id="explicationcontrole">
+        Pour tracer des losanges, il suffit de faire un clic droit sur l'arête qui sera la diagonale du losange.</div>
+    <div class="explication" id="explicationcontroleportable" style="display: none;">Pour tracer des losanges, il suffit d'abord de cliquer sur "tracer des losanges" puis de faire un clic sur l'arête qui sera la diagonale du losange.</div>
+    <div id="texte">
+        CC-BY-SA-NC Arnaud DURAND version <br>
+        sur un jeu et des grilles faits par Olivier LONGUET
+    </div>
+    <input type="text" id="copiepressepapier" style="opacity:0">
+    <div id="messagediv" style="display: none;">
+        <div id="message"></div><br><input type="button" value="Partager sur Twitter" onclick="partage()"><input type="button" onclick="messageok()" value="Ok">
+    </div>
+    <br>
+
+
+
+
+</body></html>

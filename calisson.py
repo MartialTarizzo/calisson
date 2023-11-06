@@ -434,6 +434,11 @@ def placeSommet(xs, ys, zs, d, M):
             return (False, M)  # échec
         if ys == 0 and xs > 0 and M[xs-1, ys, zs] == 0:
             return (False, M)  # échec
+        # gestion des bords x==0 et y==0
+        if xs == n and 1 in M[xs-1, ys:, zs:]:
+            return (False, M)  # échec
+        if ys == n and 1 in M[xs:, ys-1, zs:]:
+            return (False, M)  # échec
 
         # pas d'incompatibilités avec les contraintes existantes :
         # on modifie la matrice en ajoutant les contraintes liées à l'arête
@@ -481,6 +486,11 @@ def placeSommet(xs, ys, zs, d, M):
             return (False, M)  # échec
         if zs == 0 and ys > 0 and M[xs, ys-1, zs] == 0:
             return (False, M)  # échec
+        if ys == n and 1 in M[xs:, ys-1, zs:]:
+            return (False, M)  # échec
+        if zs == n and 1 in M[xs:, ys:, zs-1]:
+            return (False, M)  # échec
+
         Mp[:xs+1, :ys, :zs] = 1
         Mp[xs:, ys:, zs:] = 0
         if ys == 0:
@@ -512,6 +522,11 @@ def placeSommet(xs, ys, zs, d, M):
             return (False, M)  # échec
         if xs == 0 and zs > 0 and M[xs, ys, zs-1] == 0:
             return (False, M)  # échec
+        if zs == n and 1 in M[xs:, ys:, zs-1]:
+            return (False, M)  # échec
+        if xs == n and 1 in M[xs-1, ys:, zs:]:
+            return (False, M)  # échec
+
         Mp[:xs, :ys+1, :zs] = 1
         Mp[xs:, ys:, zs:] = 0
         if zs == 0:
@@ -752,35 +767,61 @@ test_solver(enigme, 4)
 # %%
 
 def randomEnigma(n, m):
-
+    """
+    retourne une éngme tirée au hasard dans un jeu de taille n, contenant m contraintes
+    """
+    # validation de la contrainte
     def valid(x, y, d):
+        # couple (x,y) valide ou pas ?
         if (x+y) % 2 != 0:
             return False
+
+        # coordonnées et direction dans la zone de jeu ?
         if d=="x" and len(listCoord3D(x-1, y-1, n)) > 0:
-            return True
+            # contrainte sur un bord ?
+            if (y==x+2*n) or (y==x-2*n):
+                return False
+            else:
+                return True
         if d=="y" and len(listCoord3D(x+1, y-1, n)) > 0:
-             return True
+            if (y==-x+2*n) or (y==-x-2*n):
+                return False
+            else:
+                return True
         if d=="z" and len(listCoord3D(x, y+2, n)) > 0:
-             return True
+            if x==-n or x==n:
+                return False
+            else:
+                return True
+        # contrainte incorrecte
         return False
 
     enig = []
     dirs = "xyz"
     while len(enig) < m:
+        # coordonnées et direction au hasard
         x = rd.randint(-n, n)
         y = rd.randint(-2*n, 2*n)
-        dir = rd.randint(0,2)
+        d = rd.randint(0,2)
+
+        # coordonnées de l'origine de la contrainte valides ?
         l3D = listCoord3D(x,y,n)
         if len(l3D) > 0:
-            li = (x, y, dirs[dir])
+            li = (x, y, dirs[d])
             if valid(*li):
                 enig.append(li)
     return enig
 
-rdEnig = randomEnigma(3,3)
+rdEnig = randomEnigma(3,8)
 
 test_solver(rdEnig, 3)
 print(rdEnig)
+# %%
+# Exemples de résultats obtenus (n=3, m=6)
+enigme = [(1, 1, 'xy'), (-1, 3, 'z'),
+#(1, -5, 'x'),
+(0, -4, 'z'),(0, 4, 'y'), (0, -2, 'y'), (-2, 0, 'z')]
+
 
 ##
 enigme = [(1, 3, 'x'), (2, 2, 'z'), (-1, -3, 'z'),

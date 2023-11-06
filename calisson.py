@@ -764,11 +764,15 @@ enigme = (
 
 test_solver(enigme, 4)
 
-# %%
+# %% Génération auto d'énigme
+# Version bourrin :
+# on génére des arêtes au hasard, et on espère qu'une solution va pouvoir s'en dégager.
+# Dans la majorité des cas, ça ne marche pas ...
+# Il faudrait plutôt s'inspirer des fonctions de la section 1 ********* A FAIRE ******
 
 def randomEnigma(n, m):
     """
-    retourne une éngme tirée au hasard dans un jeu de taille n, contenant m contraintes
+    retourne une éngme tirée au hasard dans un jeu de taille n, contenant m contraintes.
     """
     # validation de la contrainte
     def valid(x, y, d):
@@ -822,6 +826,7 @@ enigme = [(1, 1, 'xy'), (-1, 3, 'z'),
 #(1, -5, 'x'),
 (0, -4, 'z'),(0, 4, 'y'), (0, -2, 'y'), (-2, 0, 'z')]
 
+test_solver(enigme, 3)
 
 ##
 enigme = [(1, 3, 'x'), (2, 2, 'z'), (-1, -3, 'z'),
@@ -830,4 +835,14 @@ enigme = [(1, 3, 'x'), (2, 2, 'z'), (-1, -3, 'z'),
 (1,-1,"z"),
 (0,0,"x")
 ]
+test_solver(enigme, 3)
+
+
+##
+enigme = [(0, 2, 'x'), (-1, -1, 'x'), (-2, 2, 'x'),
+#(-1, -1, 'z'),
+ (2, 2, 'y'),
+ (0, 2, 'y'),
+(1,-3,"z"),
+(-1,-3,"y") ]
 test_solver(enigme, 3)

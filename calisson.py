@@ -664,7 +664,8 @@ def test_solver(enig, dim):
             print(f'solution {ns} incomplète : il reste {nmu} cube(s) non déterminé(s) !')
 
     # calcul de l'affichage
-    draw_solutions(enig, dim, lsol)
+    cs = 5 if ns < 3 else 4
+    draw_solutions(enig, dim, lsol, cellSize = cs)
 
     return lsol
 
@@ -940,6 +941,26 @@ enigme = [
 ]
 test_solver(enigme, 4)
 
+## taille 4
+enigme =[
+(-1,3,"y"),
+(-2,2,"x"),
+(-2,0,"x"),
+(0,4,"y"),
+(-2,4,"x"),
+(1, -5, 'z'),
+(3, 3, 'z'),
+(1, 1, 'x'),
+(-1, 5, 'x'),
+(-2, -4, 'z'),
+(3, -1, 'y'),
+(2, 2, 'z'),
+(-1, -3, 'y'),
+(-1, -1, 'y')
+]
+test_solver(enigme, 4)
+
+
 ## 3 solutions
 enigme =[#(3, -1, 'z'),
 (-1,3,"y"),
@@ -990,7 +1011,7 @@ enigme =[
 (1,3,"x"),
 
 # tracé incorrect si la ligne suivante est active
-(-1,3,"x"),
+#(-1,3,"x"),
 
  (1, -5, 'z'),
  (-3, 3, 'z'),
@@ -1005,5 +1026,5 @@ enigme =[
    ]
 
 lsol = doSolve(enigme, 4)
-draw_solutions(enigme, 4,lsol[0:], cellSize = 4)
+draw_solutions(enigme, 4,lsol[0:], cellSize = 6)
 print(listCoord3D(-1,3,4))

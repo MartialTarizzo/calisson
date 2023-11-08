@@ -275,59 +275,23 @@ def drawAxes(jeu):
             lineproj([i, 0, 0], [i+1, 0, 0], **opt)
 
 # tracé de la configuration
-# Cette fonction anticipe sur la section suivante (résolution d'une énigme) par
-# la présence de son deuxième argument, inutile jusqu'ici
-def draw_config(jeu, enigma = []):
+def draw_config(jeu):
     """
     dessine à l'aide de pyplot l'empilement de cubes codé en 3D dans jeu.
-    l'arg. enigma est là pour représenter l'énigme (ie. les segments connus
-    avant résolution.
     """
     n = jeu.shape[0]
-    plt.figure(figsize=(6 if enigma==[] else 12,6))
-    if enigma:
-        # l'aspect sqrt(2/6) est nécessaire en raison de la simplification
-        # du calcul des projections (cf fonction 'projection)
-        plt.subplot(121, adjustable='box', aspect=1/np.sqrt(3))
-        # plt.axis('equal')
-        drawHex(n)
-        draw_enigma(enigma)
-
-        plt.subplot(122, adjustable='box', aspect=1/np.sqrt(3))
-        #plt.axis('equal')
-        drawHex(n)
-        drawAxes(jeu)
-        for i in range(n):
-            for j in range(n):
-                for kk in range(n):
-                    projCube(jeu, i, j, kk)
-        draw_enigma(enigma)
-    else:
-        plt.subplot(111,adjustable='box', aspect=1/np.sqrt(3))
-        #plt.axis('equal')
-        drawHex(n)
-        drawAxes(jeu)
-        for i in range(n):
-            for j in range(n):
-                for kk in range(n):
-                    projCube(jeu, i, j, kk)
-        draw_enigma(enigma)
+    plt.figure(figsize=(6, 6))
+    # l'aspect sqrt(2/6) est nécessaire en raison de la simplification
+    # du calcul des projections (cf fonction 'projection)
+    plt.subplot(111,adjustable='box', aspect=1/np.sqrt(3))
+    #plt.axis('equal')
+    drawHex(n)
+    drawAxes(jeu)
+    for i in range(n):
+        for j in range(n):
+            for kk in range(n):
+                projCube(jeu, i, j, kk)
     plt.show()
-
-# la fonction de tracé de l'énigme
-def draw_enigma(e):
-    opt_enig = {'color': 'red', 'linewidth': 4}
-    u2 = 1# et pas 1/np.sqrt(2) , cf commentaire dans la fonction 'projection'
-    u6 = 1# et pas 1/np.sqrt(6)
-    for p in e:
-        x0, y0 = p[:2]
-        d = p[2]
-        if 'x' in d:
-            line([u2 * x0, u6 * y0], [u2 *(x0 - 1), u6*(y0-1)],**opt_enig)
-        if 'y' in d:
-            line([u2*x0, u6*y0], [u2*(x0 + 1), u6*(y0-1)],**opt_enig)
-        if 'z' in d:
-            line([u2*x0, u6*y0], [u2*x0, u6*(y0+2)],**opt_enig)
 
 # représentation du jeu en cours
 draw_config(jeu)
@@ -675,14 +639,19 @@ def doSolve(enigme, n):
 
 # %% Section 5 : tests de résolution
 
+# fonctions pour faciliter les tests
+
 def test_solver(enig, dim):
     """
+    - Résoud une énigme et retourne la liste des solutions
+    - Imprime le nombre de configurations possibles épuisant toutes les
+      contraintes de l'énigme, en informant si la solution est incomplète
+    - ouvre une fenêtre graphique représentant l'énigme et la/les solutions/s
+      (5 solutions affichées au max)
+      Si les contraintes sont insuffisantes, il est possible que certains
+      cubes soient indéterminés (affichés en gris).
+
     Args : l'énigme 2D et la dimension du cube.
-    Imprime le nombre de configurations possibles épuisant toutes les contraintes de l'énigme
-    Si les contraintes sont insuffisantes, il est possible que certains cubes soient
-    indéterminés (affichés en gris).
-    Pour chaque configuration valide, on ouvre une fenêtre graphique représentant
-    côte à côte l'énigme et la configuration
     """
     lsol = doSolve(enig, dim)
 
@@ -693,11 +662,95 @@ def test_solver(enig, dim):
         if -1 in s:
             nmu = len(np.where(s==-1)[0])
             print(f'solution {ns} incomplète : il reste {nmu} cube(s) non déterminé(s) !')
-        draw_config(s, enigma=enig)
-        plt.show()
-        plt.close()
+
+    # calcul de l'affichage
+    draw_solutions(enig, dim, lsol)
 
     return lsol
+
+
+# tracé des solutions
+def draw_solutions(enigma, n, lSols, cellSize = 4):
+    """
+    dessine à l'aide de pyplot l'enigme ainsi que les solutions trouvées.
+    - enigma représente l'énigme (ie. les segments connus avant résolution)
+    - lSols est une liste des solutions trouvées
+
+    Le dessin se fait dans une grille de 2 x 3 cellules (subplots) au maximum,
+    ce qui impose qu'on ne trace que l'énigme et 5 solutions au max.
+    Si lSols est vide, on ne dessine que l'énigme.
+
+    args :
+    - enigma : énigme à résoudre
+    - n : dimension de l'espace de jeu (côté du grand cube)
+    - lSols : liste des solutions trouvées
+    - cellSize : taille d'une cellule (<-> 1 subplot) affichant l'énigme
+      ou une solution
+    """
+    # Remarque : dans les fonctions de tracé, l'aspect sqrt(2/6) est nécessaire
+    # en raison de la simplification du calcul des projections
+    # (cf fonction 'projection)
+
+    # la fonction de tracé de l'énigme dans le subplot courant
+    def draw_enigma(e):
+        opt_enig = {'color': 'red', 'linewidth': 4}
+        for p in e:
+            x0, y0 = p[:2]
+            d = p[2]
+            if 'x' in d:
+                line([x0, y0], [x0 - 1, y0-1],**opt_enig)
+            if 'y' in d:
+                line([x0, y0], [x0 + 1, y0-1],**opt_enig)
+            if 'z' in d:
+                line([x0, y0], [x0, y0+2],**opt_enig)
+
+    # Le tracé d'une solution dans le subplot courant
+    def draw_solution(s):
+        drawHex(n)
+        drawAxes(jeu)
+        for i in range(n):
+            for j in range(n):
+                for kk in range(n):
+                    projCube(s, i, j, kk)
+
+
+    if len(lSols) == 0:
+        print('Pas de solutions !')
+        plt.figure(figsize=(cellSize, cellSize), tight_layout = True)
+        plt.subplot(111, adjustable='box', aspect=1/np.sqrt(3))
+        drawHex(n)
+        draw_enigma(enigma)
+    else:
+        nls = len(lSols)
+        # trop de solutions ?
+        if nls > 5 :
+            print(f'Trop de solutions ({nls})')
+            print('Seules les 5 premières seront dessinées !')
+
+        # définition de l'arrangement des subplots
+        if nls < 3: # subplots sur une seule ligne
+            formatSubPlots = 111 + 10 * nls
+            plt.figure(figsize=(cellSize * (1 + nls), cellSize),
+                        tight_layout = True)
+        else: # subplots sur 2 lignes et 3 colonnes
+            formatSubPlots = 231
+            plt.figure(figsize = (3*cellSize, 2*cellSize), tight_layout = True)
+
+        # tracé de l'enigme dans le premier subplot
+        plt.subplot(formatSubPlots, adjustable='box', aspect=1/np.sqrt(3))
+        drawHex(n)
+        draw_enigma(enigma)
+
+        # tracé des solutions dans les subplots restants
+        for ns in range(min(nls, 5)):
+            plt.subplot(formatSubPlots + ns + 1,
+                        adjustable='box', aspect=1/np.sqrt(3))
+            # tracé de la solution
+            draw_solution(lSols[ns])
+            # on superpose l'énigme pour voir l'énigme en même temps !
+            draw_enigma(enigma)
+    plt.show()
+
 
 
 # %% taille 2
@@ -822,16 +875,14 @@ def randomEnigma(n, m):
                 enig.append(li)
     return enig
 
-rdEnig = randomEnigma(3,8)
+rdEnig = randomEnigma(4,10)
 
-listSol = test_solver(rdEnig, 3)
+listSol = test_solver(rdEnig, 4)
 print(rdEnig)
 
 # %% Section 6 : énigmes aléatoires, puis solution unique 'à la main'
-## taille 3
-=======
-# %%
-rdEnig=[(-2, 2, 'x'),
+
+enigme=[(-2, 2, 'x'),
  (-1, 1, 'z'),
  (0, 4, 'y'),
  (-1, -1, 'y'),
@@ -839,7 +890,7 @@ rdEnig=[(-2, 2, 'x'),
  (-2, -2, 'z'),
  (2, 2, 'x'),
  (2, -4, 'z')]
-listSol = test_solver(rdEnig, 3)
+listSol = test_solver(enigme, 3)
 
 # %%
 # Exemples de résultats obtenus (n=3, m=6)
@@ -889,6 +940,24 @@ enigme = [
 ]
 test_solver(enigme, 4)
 
+## 3 solutions
+enigme =[#(3, -1, 'z'),
+(-1,3,"y"),
+(-2,2,"x"),
+(-2,0,"x"),
+(1,3,"x"),
+ (1, -5, 'z'),
+ (3, 3, 'z'),
+ (1, 1, 'x'),
+ (-1, 5, 'x'),
+ (-2, -4, 'z'),
+  (3, -1, 'y'),
+  (2, 2, 'z'),
+  (-1, -3, 'y'),
+   (-1, -1, 'y')
+   ]
+test_solver(enigme, 4)
+
 ## taille 5
 enigme = [
     (-1, -3, 'z'),
@@ -913,3 +982,28 @@ enigme = [
 ]
 test_solver(enigme, 5)
 
+###### BUG ?
+enigme =[
+(-1,3,"y"),
+(-2,2,"x"),
+(-2,0,"x"),
+(1,3,"x"),
+
+# tracé incorrect si la ligne suivante est active
+(-1,3,"x"),
+
+ (1, -5, 'z'),
+ (-3, 3, 'z'),
+ (3, 3, 'z'),
+ (1, 1, 'x'),
+ (-1, 5, 'x'),
+ (-2, -4, 'z'),
+  (3, -1, 'y'),
+  (2, 2, 'z'),
+  (-1, -3, 'y'),
+   (-1, -1, 'y')
+   ]
+
+lsol = doSolve(enigme, 4)
+draw_solutions(enigme, 4,lsol[0:], cellSize = 4)
+print(listCoord3D(-1,3,4))

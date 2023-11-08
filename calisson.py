@@ -687,11 +687,17 @@ def test_solver(enig, dim):
     lsol = doSolve(enig, dim)
 
     print(f"Nombre de solutions : {len(lsol)}")
-
+    ns = 0
     for s in lsol:
+        ns += 1
+        if -1 in s:
+            nmu = len(np.where(s==-1)[0])
+            print(f'solution {ns} incomplète : il reste {nmu} cube(s) non déterminé(s) !')
         draw_config(s, enigma=enig)
         plt.show()
         plt.close()
+
+    return lsol
 
 
 # %% taille 2
@@ -818,11 +824,26 @@ def randomEnigma(n, m):
 
 rdEnig = randomEnigma(3,8)
 
-test_solver(rdEnig, 3)
+listSol = test_solver(rdEnig, 3)
 print(rdEnig)
 
 # %% Section 6 : énigmes aléatoires, puis solution unique 'à la main'
 ## taille 3
+=======
+# %%
+rdEnig=[(-2, 2, 'x'),
+ (-1, 1, 'z'),
+ (0, 4, 'y'),
+ (-1, -1, 'y'),
+ (1, -1, 'x'),
+ (-2, -2, 'z'),
+ (2, 2, 'x'),
+ (2, -4, 'z')]
+listSol = test_solver(rdEnig, 3)
+
+# %%
+# Exemples de résultats obtenus (n=3, m=6)
+
 enigme = [(1, 1, 'xy'), (-1, 3, 'z'),
 #(1, -5, 'x'),
 (0, -4, 'z'),(0, 4, 'y'), (0, -2, 'y'), (-2, 0, 'z')]

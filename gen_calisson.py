@@ -223,8 +223,8 @@ def randomEnigma(n, konfig = []):
 
 
 # %% tests
-n=3
-enigme, konf = randomEnigma(n, konf)
+n=5
+enigme, konf = randomEnigma(n)
 print(enigme)
 
 # représentation du jeu en cours
@@ -233,12 +233,4 @@ draw_config(matrice_jeu(konf))
 
 from calisson import test_solver, listCoord3D, draw_config
 
-##
-enigme = \
-[(1,3,"x"),
-(2,-2,"z"),
-(2,2,"x"),
-(0, -4, 'z'),
- (1, -1, 'x'), (-1, -1, 'x'), (2, -2, 'x'), (-2, -2, 'z'),
-(-1,3,"xy")]
 test_solver(enigme, n)

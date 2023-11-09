@@ -130,7 +130,7 @@ rdEnig = randomEnigma(4,10)
 listSol = test_solver(rdEnig, 4)
 print(rdEnig)
 
-# %% Section 6 : énigmes aléatoires, puis solution unique 'à la main'
+# %% Section 6 : énigmes aléatoires, puis retouchées 'à la main'
 
 enigme=[(-2, 2, 'x'),
  (-1, 1, 'z'),
@@ -277,7 +277,17 @@ enigme =[
   (-1, -3, 'y'),
    (-1, -1, 'y')
    ]
+test_solver(enigme, 4)
 
+##
+enigme = \
+[(1,3,"x"),
+(2,-2,"z"),
+(2,2,"x"),
+(0, -4, 'z'),
+ (1, -1, 'x'), (-1, -1, 'x'), (2, -2, 'x'), (-2, -2, 'z'),
+(-1,3,"xy")]
+test_solver(enigme, 3)
 ##
 enigme = [
 (0,2,"z"),
@@ -293,3 +303,19 @@ enigme = [
 
 
 test_solver(enigme, 3)
+
+## 5 difficile ...
+enigme = [(-2, 0, 'x'), (2, -2, 'x'), (-2, -2, 'y'), (-1, 7, 'y'), (2, -4, 'y'),
+(-3,3,'z'),
+(-4,-4,'y'),
+(-1,-1,'z'),
+(0,-6,'x'),
+(2,2,'y'),
+(3,1,'y'),
+(2,4,'z'),
+(0,8,'y'),
+(3,-1,'y'),
+(1,-5,'x'),
+(3, 3, 'z'), (-3, 1, 'x'), (0, -4, 'x'), (1, 1, 'x'), (-1, 3, 'z')
+]
+test_solver(enigme, 5)

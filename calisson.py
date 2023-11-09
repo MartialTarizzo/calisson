@@ -11,83 +11,17 @@ import random as rd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Taille de la zone de rangement des cubes
-n = 5
-
-# %% Section 1 : génération d'un empilement
-# --------------------------------------------
-"""
-représentation de l'empilement des petits cubes :
-liste de n**2 élements, représentant le nombre de petits cubes empilés
-au dessus du carré de coordonnées (i,j) dans le plan horizontal.
-L'index du carré (i,j) dans la liste est i * n + j , i=0..n-1, j=0..n-1
-le carré (0,0) est le plus éloigné de l'observateur, base i,j,k directe
-"""
-
-# le jeu, vide de tout cube
-def kVide():
-    return [0]*n**2
 
 
-def ajouteCube(k):
-    """retourne la liste de toutes les configurations de jeu possibles en
-     ajoutant un cube à la configuration k fournie en argument."""
-    l = []
-    for i in range(n):
-        for j in range(n):
-            hok = k[i * n + j] < n
-            iok = i > 0 and k[(i - 1) * n + j] > k[i * n + j]
-            jok = j > 0 and k[i * n + j - 1] > k[i * n + j]
-            # print(i,j,hok,iok,jok)
-            if i == 0:
-                if j == 0:
-                    ok = hok
-                else:
-                    ok = hok and jok
-            else:
-                if j == 0:
-                    ok = hok and iok
-                else:
-                    ok = hok and iok and jok
-            if ok:
-                newk = k.copy()
-                newk[i * n + j] = newk[i * n + j] + 1
-                l.append(newk)
-    return l
-
-# %% génération d'une configuration contenant nbCubes
-# La config est obtenue en ajoutant les cubes un à un à partir de la config vide,
-# et en prenant une config au hasard à chaque étape.
-def make_config(nbCubes):
-    k = kVide()
-    f = 1   # pour estimer le nombre de façons différentes d'empiler les nbCubes
-    for i in range(nbCubes):
-        lk = ajouteCube(k)
-        m = len(lk)
-        f *= m
-        k = rd.choice(lk)
-    return k, f
-
-
-# nombre de cubes dans la configuration
-nbCubes = rd.randint(n**3//3, 2*n**3//3)
-print(f"on a {nbCubes} cubes dans la configuration")
-
-k, f = make_config(nbCubes)
-print(k, f)
 # %% Section 2 : Représentation graphique d'une configuration
 # ------------------------------------------------------------
-
 # sortie graphique sans interaction : on utilise pyplot pour faire simple
 
 # Deux utilitaires
-
-
 def line(A, B, **kwargs):
     """ trace une ligne dans le plan de figure entre les points A et B.
     Chaque point est représenté par un doublet [x, y] """
     plt.plot([A[0], B[0]], [A[1], B[1]], **kwargs)
-
 
 def dot(A, size, **kwargs):
     """ dessine un point au point A """
@@ -110,37 +44,12 @@ def projection(A):
     # indique correctement les coordonnées utilisées pour le codage des énigmes
     return [y - x, 2 * z - (x + y)]
 
-
 def lineproj(A, B, **kwargs):
     """ dessine la ligne entre les points 3D A et B dans le plan de projection
     """
     Ap = projection(A)
     Bp = projection(B)
     line(Ap, Bp, **kwargs)
-
-
-# Changement de modélisation de la configuration pour faciliter le tracé
-# La section 1 représente le jeu par une matrice n x n.
-# Cette représentation compacte n'est pas commode pour le tracé.
-# On va changer pour une matrice de dimension 3 : n x n x n
-# Les arêtes des petits cubes sont donc de longueur 1.
-# Chaque élément de la matrice est un entier dans {-1,0,+1} indiquant l'état
-# d'un petit cube dont l'origine a pour coordonnées le point (i,j,k)
-# état : -1 -> état inconnu, 0 -> cube absent, +1 -> cube présent
-
-# Passage de la représentation compacte à la matrice de dimension 3
-def matrice_jeu(konfig):
-    # jeu est la matrice de taille n**3 obtenue à partir de la configuration k
-    jeu = np.zeros([n, n, n], dtype='bool')
-    for i in range(n):
-        for j in range(n):
-            for k in range(konfig[n*i+j]):
-                jeu[i, j, k] = True
-    return jeu
-
-
-jeu = matrice_jeu(k)
-# print(jeu)
 
 # Dessin d'un petit cube de coordonnées 3D [i,j,k]
 # On tient compte de l'environnement du cube pour le dessiner que les arêtes
@@ -232,8 +141,6 @@ def projCube(jeu, i, j, k):
         lineproj(S5, S6, **opt_indet)
         lineproj(S6, S7, **opt_indet)
 
-
-
 # dessin de l'aire de jeu
 def drawHex(n):
     """ tracé de l'hexagone qui représente la projection du grand cube
@@ -293,8 +200,6 @@ def draw_config(jeu):
                 projCube(jeu, i, j, kk)
     plt.show()
 
-# représentation du jeu en cours
-draw_config(jeu)
 
 # %% Section 3 : RECHERCHE DE LA SOLUTION D'UNE ENIGME
 #  ##########################
@@ -516,7 +421,7 @@ def placeSommet(xs, ys, zs, d, M):
 
 # %% Section 4 : Résolution
 
-# 4.1 : pour jouer à la main, étape par étape
+""" # 4.1 : pour jouer à la main, étape par étape
 n = 2
 #enigme = ((0, 2, "z"), (0, 0, "x"), (1, 1, "x"))
 enigme = ((0, 0, "x"), (1, 1, "x"), (0, 2, "z"))
@@ -543,7 +448,7 @@ print(r, M1)
 r, M1 = placeSommet(0, 0, 1, "z", M1)
 print(r, M1)
 
-draw_config(M1)
+draw_config(M1) """
 
 # Existe-t-il des énigmes pour lesquelles plus de 2 passes soient nécessaires ???
 # Ça paraît probable, si la taille du jeu est plus grande.
@@ -572,7 +477,7 @@ def trans2D_3D(enigme, n):
     return (enig3)
 
 
-(trans2D_3D(enigme, n))
+# (trans2D_3D(enigme, n))
 
 # Le solveur : automatisation de la recherche d'un point fixe représentant la solution
 def solve(lc3D, M, lr, p=0):
@@ -637,9 +542,7 @@ def doSolve(enigme, n):
     return lrf
 
 
-# %% Section 5 : tests de résolution
-
-# fonctions pour faciliter les tests
+# %% Section 5 : fonctions pour faciliter les tests
 
 def test_solver(enig, dim):
     """
@@ -668,7 +571,6 @@ def test_solver(enig, dim):
     draw_solutions(enig, dim, lsol, cellSize = cs)
 
     return lsol
-
 
 # tracé des solutions
 def draw_solutions(enigma, n, lSols, cellSize = 4):
@@ -708,7 +610,7 @@ def draw_solutions(enigma, n, lSols, cellSize = 4):
     # Le tracé d'une solution dans le subplot courant
     def draw_solution(s):
         drawHex(n)
-        drawAxes(jeu)
+        drawAxes(s)
         for i in range(n):
             for j in range(n):
                 for kk in range(n):
@@ -751,7 +653,3 @@ def draw_solutions(enigma, n, lSols, cellSize = 4):
             # on superpose l'énigme pour voir l'énigme en même temps !
             draw_enigma(enigma)
     plt.show()
-
-
-
-print(listCoord3D(-1,3,4))

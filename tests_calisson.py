@@ -1,8 +1,6 @@
-import sys
+import random as rd
+from calisson import test_solver, listCoord3D, draw_config
 
-print(sys.path)
-
-from calisson import test_solver, listCoord3D
 #enigme = ((-1, 1, "y"), (0, 0, "y"), (0, 2, "z"))
 # %% taille 2
 #enigme = [(0,2,"x"),(1,1,"z"), (-1,-3,"z"),(1,-3,"z")]
@@ -279,12 +277,6 @@ enigme =[
   (-1, -3, 'y'),
    (-1, -1, 'y')
    ]
-
-lsol = doSolve(enigme, 4)
-draw_solutions(enigme, 4,lsol[0:], cellSize = 6)
-
-
-
 
 ##
 enigme = [

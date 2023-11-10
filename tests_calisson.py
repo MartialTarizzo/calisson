@@ -71,6 +71,26 @@ enigme = (
 
 test_solver(enigme, 4)
 
+
+## 4 difficile (pas de bord, pas d'esquisse de face)
+enigme = [
+ (2, -2, 'x'),
+ (0, -4, 'y'),
+ (-1,-3,"x"),
+ (1,5,"y"),
+ (-3,-1,"z"),
+ (-2, 4, 'y'),
+ (0, 4, 'y'),
+ (-1, 5, 'y'),
+ (2,0,"y"),
+ (1,-1,"x"),
+ (3, 1, 'z'),
+ (-1, 1, 'y'),
+ (-1, -1, 'x')
+ ]
+
+test_solver(enigme, 4)
+
 # %% Génération auto d'énigme
 # Version bourrin :
 # on génére des arêtes au hasard, et on espère qu'une solution va pouvoir s'en dégager.

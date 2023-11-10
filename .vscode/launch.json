@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open calisson.html",
+            "file": "/Users/martial/Desktop/calisson 2/calisson_js/calisson.html?tab=fffssfsffsfsftssfsssfsfffttfsffsssftfsftsffffsfssffsftssfsffftfsffssfsfs33301"
+        },
+        {
+            "name": "Python: File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "justMyCode": true
+        }
+    ]
+}

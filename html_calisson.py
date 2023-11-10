@@ -72,6 +72,13 @@ v3y = longueur;
 import numpy as np
 
 def make_tab_segments(taille=3):
+    """
+    retourne la liste de tous les segments traçables avec la syntaxe utilisée pour l'encodage
+    des énigmes.
+    La liste est dans l'ordre du tracé des segments dans le code JS : ceci est important
+    car le programme web se sert de la position dans une chaîne pour connaître le status
+    d'une arête
+    """
     # Les coordonnées javascript sont avec origine en haut et axe y vers le bas.
     # le codage des coordonnées pour mes fonctions est avec origine au centre et axe y vers le haut
     # cette fonction effectue la transformation js -> python
@@ -111,64 +118,42 @@ def make_tab_segments(taille=3):
                     tabsegment.append([[ k, 2*j + k],
                         [-1 + k, 1 + 2*j + k]])
 
+    # tabsegment est maintenant une liste de segments, chaque segment est de la
+    # forme [A,B], A et B étant des points, donc des listes de la forme [x, y]
+    # dans le système de coordonnées JS.
+
+    # on passe en coordonnées Python en modifiant tabsegment
     transf_coord(tabsegment)
-    return tabsegment
 
-import matplotlib.pyplot as plt
+    # on va maintenant transformer chaque segment pour passer dans la même syntaxe
+    # que celle utilisée pour l'encodage Python des énigmes (X, Y, direction)
 
-def line(A, B, **kwargs):
-    """ trace une ligne dans le plan de figure entre les points A et B.
-    Chaque point est représenté par un doublet [x, y] """
-    plt.plot([A[0], B[0]], [A[1], B[1]], **kwargs)
+    l = [] # la liste résultat qui sera rendue par la fonction
+    for cp in tabsegment: # pour chaque segment <-> couple de points
+        A, B = cp[0], cp[1]
+        if A[0]==B[0]: # segment selon z, l'origine est le point le plus bas
+            if A[1]>B[1]:
+                l.append(tuple(B + ["z"]))
+            else:
+                l.append(tuple(A + [ "z"]))
 
-def draw_config(tab):
-    """
-    dessine à l'aide de pyplot l'empilement de cubes codé en 3D dans jeu.
-    """
-    plt.figure(figsize=(6, 6))
-    # l'aspect sqrt(2/6) est nécessaire en raison de la simplification
-    # du calcul des projections (cf fonction 'projection)
-    plt.subplot(111,adjustable='box', aspect=1/np.sqrt(3))
-    #plt.axis('equal')
-    for li in tab:
-        line(*li)
-        plt.pause(0.5)
-    plt.show()
+        elif (A[0]-B[0])*(A[1]-B[1]) > 0: # segment selon x, origine la plus à droite
+            if A[0]<B[0]:
+                l.append(tuple(B + ["x"]))
+            else:
+                l.append(tuple(A + ["x"]))
+        else: # segment selon y, origine la plus à gauche
+            if A[0]<B[0]:
+                l.append(tuple(A + ["y"]))
+            else:
+                l.append(tuple(B + ["y"]))
+    # C'est fini
+    return l
 
-ts = make_tab_segments(2)
-draw_config(ts)
 
-"""
-ts vaut
-[[[0, 4], [0, 2]],
- [[-1, 3], [-1, 1]],
- [[-1, 3], [0, 2]],
- [[-2, 2], [-1, 1]],
- [[0, 2], [-1, 1]],
- [[0, 2], [0, 0]],
- [[-1, 1], [-2, 0]],
- [[-1, 1], [-1, -1]],
- [[-1, 1], [0, 0]],
- [[-2, 0], [-1, -1]],
- [[0, 0], [-1, -1]],
- [[0, 0], [0, -2]],
- [[-1, -1], [-2, -2]],
- [[-1, -1], [-1, -3]],
- [[-1, -1], [0, -2]],
- [[0, -2], [-1, -3]],
- [[0, -2], [0, -4]],
- [[1, 3], [1, 1]],
- [[1, 3], [0, 2]],
- [[2, 2], [1, 1]],
- [[0, 2], [1, 1]],
- [[1, 1], [2, 0]],
- [[1, 1], [1, -1]],
- [[1, 1], [0, 0]],
- [[2, 0], [1, -1]],
- [[0, 0], [1, -1]],
- [[1, -1], [2, -2]],
- [[1, -1], [1, -3]],
- [[1, -1], [0, -2]],
- [[0, -2], [1, -3]]]
+## pour tester
+from calisson import test_solver
 
- """
+
+# doit dessiner tous les segments, ce qui est une énigme impossible
+test_solver(make_tab_segments(6), 6)

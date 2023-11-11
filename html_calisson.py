@@ -69,8 +69,6 @@ v3x = longueur
 v3y = longueur;
 """
 
-import numpy as np
-
 def make_tab_segments(taille=3):
     """
     retourne la liste de tous les segments traçables avec la syntaxe utilisée pour l'encodage
@@ -151,9 +149,200 @@ def make_tab_segments(taille=3):
     return l
 
 
+# la chaîne argument de la page web est de la forme suivante (arène de jeu de taille 3):
+# "fffssfsffsfsftssfsssfsfffttfsffsssftfsftsffffsfssffsftssfsffftfsffssfsfs33301"
+# t -> arête fixée non modifiable  <=> arête de l'énigme toujours affichée dans la page web
+# s -> arête de la solution, non affichée (ça serait trop facile !)
+# f -> arête ne faisant pas partie de la solution
+# les chiffres à la fin ne sont qu'une référence ver le numéro de l'énigme (ne servent à rien ici)
+
+from calisson import doSolve, projection
+from gen_calisson import encodage, encodeSolution
+import os, webbrowser
+
+# fonction qui transforme une énigme python en une chaîne d'url ayant le bon format
+# pour le script JS de la page de mathix.org
+# il suffit alors, sous python, d'invoquer qque chose du genre :
+
+# url = make_url(enigme, 5)
+# webbrowser.open(url)
+
+# pour avoir la page de résolution de l'énigme qui s'ouvre dans son navigateur
+def make_url(enigme, dim):
+    """
+    enigme : l'énigme à résoudre. Il est souhaitable (nécessaire !) qu'elle ne
+    donne qu'une seule solution.
+    dim : la taille de la zone de rangement des cubes
+
+    retourne l'url permettant de tenter la résolution sur mathix.org
+    """
+    tabseg = make_tab_segments(dim)
+    lsol = doSolve(enigme, dim)
+    jeu = lsol[0]
+    encsol = encodeSolution(encodage(jeu))
+
+    for i in range(dim):
+        if not jeu[i, 0, 0]:
+            X,Y = projection((i, 0, 0))
+            encsol.append((X, Y, 'x'))
+        if not jeu[0, i, 0]:
+            X,Y = projection((0, i, 0))
+            encsol.append((X, Y, 'y'))
+        if not jeu[0, 0, i]:
+            X,Y = projection((0, 0, i))
+            encsol.append((X, Y, 'z'))
+
+    # construction du paramètre de l'url
+    str = ""
+    for seg in tabseg:
+        if seg in enigme:
+            str += 't'
+        elif seg in encsol:
+            str += 's'
+        else:
+            str += 'f'
+
+    # fini ...
+
+    return 'https://mathix.org/calisson/index.html?tab=' + str
+
+
+# remarque :
+# si on tente d'ouvrir une adresse locale du genre :
+# command = 'file://' + os.getcwd() + "/calisson_js/calisson.html?tab=" + str
+# avec l'instruction suivante :
+# webbrowser.open(command)
+#
+# Sur mon vieux mac (10.13), ça marche pas, le paramètre est effacé pour le
+# navigateur par défaut (chrome). (référence au bug connue et référencée sur le web)
+# Si je lance avec safari, ça marche :
+# webbrowser.get('Safari').open(command)
+#
+# Par contre, pas de problème pour une adresse web réelle.
+# C'est la raison pour laquelle "https://mathix.org/calisson/index.html?tab="
+# est utilisée dans la fonction précédente
+
+import re
+
+def make_enigma_from_url(orgurl):
+    """
+    orgurl : adresse web contenant une énigme proposée sur le site mathix.org
+    Retourne une paire (dim, énigme) où dim est la taille du jeu et énigme en encodage Python
+
+    En détails :
+    orgurl est de la forme suivante :
+    orgurl = "https://mathix.org/calisson/index.html?tab=fffssffffsstft...sffsfsfssffff455"
+
+    Le nombre à la fin de la chaîne est juste une étiquette de numérotation :
+    sans intérêt ici, on la retire.
+
+    Ce qui suit alors "tab=" contient l'encodage de l'énigme (et de la solution ...)
+    L'énigme correspond aux arêtes fixées par le concepteur d'énigme, marquées par 't'
+    La solution prévue est marquée par 's'
+    Les arêtes sont citées dans l'ordre des arêtes calculées par la fonction make_tab_segments.
+    """
+
+    # calcul de la taille de jeu
+    tab_withnum = orgurl.split("=")[1] # on récupère ce qui suit le "="
+    tab = re.findall('[tsf]+', tab_withnum)[0] # on vire le nombre à la fin
+
+    # le nombre d'arêtes est de la forme 3n(3n-1). Plutôt que de résoudre cette équa du 2nd degré
+    # on boucle pour déterminer la taille
+    # (fortement inspiré du code JavaScript qui fait la même chose)
+    dim = 1
+    while 3* dim * (3 * dim - 1) < len(tab):
+        dim +=1
+
+    # maintenant qu'on a la dimension, on fabrique le tableau de segments
+    tabseg = make_tab_segments(dim)
+
+    # et l'énigme (on pourrait aussi extraire la solution, mais ce n'est pas le but)
+    enigme = []
+    for i, c in enumerate(tab):
+        if c == "t":
+            enigme.append(tabseg[i])
+
+    return dim, enigme
+
+
 ## pour tester
 from calisson import test_solver
 
+# une engime de niveau 5, difficile, n'ayant qu'une solution
+enigme = [(-2, 0, 'x'), (2, -2, 'x'), (-2, -2, 'y'), (-1, 7, 'y'), (2, -4, 'y'),
+(-3,3,'z'),
+(-4,-4,'y'),
+(-1,-1,'z'),
+(0,-6,'x'),
+(2,2,'y'),
+(3,1,'y'),
+(2,4,'z'),
+(0,8,'y'),
+(3,-1,'y'),
+(1,-5,'x'),
+(3, 3, 'z'), (-3, 1, 'x'), (0, -4, 'x'), (1, 1, 'x'), (-1, 3, 'z')
+]
 
-# doit dessiner tous les segments, ce qui est une énigme impossible
-test_solver(make_tab_segments(6), 6)
+# lancement du navigateur sur mathix
+url = make_url(enigme, 5)
+webbrowser.open(url)
+
+# affichage de la resolution auto de l'énigme
+test_solver(enigme,5)
+
+## énigme 459 (correcte)
+import re
+
+orgurl = "https://mathix.org/calisson/index.html?tab=ffffftsfffffffsssfsffsfffffffffssftffssftftsffffsfftfssffsffsffffffsfsffsffsftfsfssfsfffttftfffffstfssffffsfffffsffsffsffsssftfffsffsffsfsfffffsffsstftffssfsffffffssffffffsstfsfsftsfffstfffsfsffsfffsffsffftfsfssffffsfsfsssfsfsftsfftssfsffsffffffffssftffsfssffftfssffsfffftsffffssfsfftsftfffsffssstsfsffsfsf459"
+
+dim, enigme = make_enigma_from_url(orgurl)
+test_solver(enigme, dim)
+
+## grille 455 mathix incorrecte (non entièrement déterminée)
+orgurl = "https://mathix.org/calisson/index.html?tab=fffffffssffffffffsstftfftfffffssfsfsfsffssfsfssfsfsssftftsffsffsfffsftffsffsfftfsfssfsfsffsfsfssssfsfffttfstssfsftfsffsssfsftfssssftfsfsssfsfsfsffsftffffffffffffffffffstfffffstssfffsfsfsssfsfsfstfffffffsfssstsffsfffsffffffftffffffffsfffffffsffffffffsffffffsfstfffssfsffffssfffsftfsffsssffstsfsfsftfsfssffff455"
+
+# ce qui donne :
+enigme = \
+[# contraintes d'origine (à partir de l'url)
+ (-2, 8, 'y'),
+ (-3, 5, 'z'),
+ (-4, 4, 'z'),
+ (-2, 2, 'z'),
+ (-3, 3, 'x'),
+ (-1, 1, 'z'),
+ (-4, -2, 'z'),
+ (0, -2, 'z'),
+ (-1, -1, 'x'),
+ (-2, -2, 'x'),
+ (-4, -4, 'x'),
+ (-2, -4, 'x'),
+ (-4, -8, 'z'),
+ (-1, -7, 'y'),
+ (5, 7, 'x'),
+ (2, 6, 'z'),
+ (3, 5, 'y'),
+ (1, 5, 'x'),
+ (1, 1, 'z'),
+ (2, -2, 'y'),
+ (3, -5, 'y'),
+ (2, -8, 'z'),
+ (1, -9, 'z')
+ # avec les contraintes d'origine, 8 cubes sont indéterminés
+
+ # deux exemples de levée d'indétermination
+ # Exemple 1
+ ,
+ (0,-6,"z"),
+ (5,-3,"z"),
+ (4,2,"y"),
+
+ # Exemple 2
+ # ,
+ # (1,-7,"z"),
+ # (5,-3,"z"),
+ # (4,4,"y")
+ #
+ ]
+
+test_solver(enigme,6)
+

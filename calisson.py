@@ -477,33 +477,31 @@ def trans2D_3D(enigme, n):
     return (enig3)
 
 
-# (trans2D_3D(enigme, n))
-
 # Le solveur : automatisation de la recherche d'un point fixe représentant la solution
-def solve(lc3D, M, lr, p=0):
+def solve(lc3D, M, lr, p=0, trace = False):
     """
     Args :
     - lc3d est une liste de contraintes 3D représentant l'énigme
     - M est la matrice de représentation du jeu
     - lr est la liste modifiée par effet de bord, contenant les matrices solutions
-    - p est le niveau de récursion, utilisé pour les impressions de débogage.
-      !!!! à supprimer plus tard !!!!
+    - p est le niveau de récursion, utilisé pour les impressions de traçage.
+    - trace = True provoque l'impression des infos de traçage
 
     """
     if lc3D == []:
-        print('<-', M)
+        if trace : print('<-', M)
         lr.append(M)
         return
     for c in lc3D[0]:
         r, Mp = placeSommet(*c, M)
         if r:
-            print("  "*(p+1), c)
-            solve(lc3D[1:], Mp, lr, p+1)
+            if trace : print("  "*(p+1), c)
+            solve(lc3D[1:], Mp, lr, p+1, trace = trace)
         else:
-            print("--"*(p+1), c)
+            if trace : print("--"*(p+1), c)
 
 
-def doSolve(enigme, n):
+def doSolve(enigme, n, trace = False):
     """
     Gestion du solveur : la fonction solve retourne une liste de résultats possibles.
     Chacun de ces résultats peut être incomplet (des cubes sont encore indéterminés)
@@ -520,9 +518,9 @@ def doSolve(enigme, n):
         if -1 not in r: # pas d'indétermination
             return r
         # il y a des cubes non déterminés. On refait un tour ...
-        print('Recherche de point fixe ...')
+        if trace : print('Recherche de point fixe ...')
         lrc = []
-        solve(lc3D, r, lrc)
+        solve(lc3D, r, lrc, trace = trace)
         if len(lrc) > 0:
             if np.array_equal(lrc[0], r): # pas d'évolution -> point fixe atteint
                 return r
@@ -533,7 +531,7 @@ def doSolve(enigme, n):
     M = -np.ones((n, n, n), dtype='int')
     lc3D = trans2D_3D(enigme, n)
     lr = []
-    solve(lc3D, M, lr)  # première passe
+    solve(lc3D, M, lr, trace = trace)  # première passe
     lrf = []
     for r in lr:
         rr = pf(r)
@@ -544,7 +542,7 @@ def doSolve(enigme, n):
 
 # %% Section 5 : fonctions pour faciliter les tests
 
-def test_solver(enig, dim):
+def test_solver(enig, dim, trace=False):
     """
     - Résoud une énigme et retourne la liste des solutions
     - Imprime le nombre de configurations possibles épuisant toutes les
@@ -556,7 +554,7 @@ def test_solver(enig, dim):
 
     Args : l'énigme 2D et la dimension du cube.
     """
-    lsol = doSolve(enig, dim)
+    lsol = doSolve(enig, dim, trace)
 
     print(f"Nombre de solutions : {len(lsol)}")
     ns = 0

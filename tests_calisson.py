@@ -91,64 +91,6 @@ enigme = [
 
 test_solver(enigme, 4)
 
-# %% Génération auto d'énigme
-# Version bourrin :
-# on génére des arêtes au hasard, et on espère qu'une solution va pouvoir s'en dégager.
-# Dans la majorité des cas, ça ne marche pas ...
-# Il faudrait plutôt s'inspirer des fonctions de la section 1 ********* A FAIRE ******
-
-import random as rd
-
-def randomEnigma(n, m):
-    """
-    retourne une éngme tirée au hasard dans un jeu de taille n, contenant m contraintes.
-    """
-    # validation de la contrainte
-    def valid(x, y, d):
-        # couple (x,y) valide ou pas ?
-        if (x+y) % 2 != 0:
-            return False
-
-        # coordonnées et direction dans la zone de jeu ?
-        if d=="x" and len(listCoord3D(x-1, y-1, n)) > 0:
-            # contrainte sur un bord ?
-            if (y==x+2*n) or (y==x-2*n):
-                return False
-            else:
-                return True
-        if d=="y" and len(listCoord3D(x+1, y-1, n)) > 0:
-            if (y==-x+2*n) or (y==-x-2*n):
-                return False
-            else:
-                return True
-        if d=="z" and len(listCoord3D(x, y+2, n)) > 0:
-            if x==-n or x==n:
-                return False
-            else:
-                return True
-        # contrainte incorrecte
-        return False
-
-    enig = []
-    dirs = "xyz"
-    while len(enig) < m:
-        # coordonnées et direction au hasard
-        x = rd.randint(-n, n)
-        y = rd.randint(-2*n, 2*n)
-        d = rd.randint(0,2)
-
-        # coordonnées de l'origine de la contrainte valides ?
-        l3D = listCoord3D(x,y,n)
-        if len(l3D) > 0:
-            li = (x, y, dirs[d])
-            if valid(*li):
-                enig.append(li)
-    return enig
-
-rdEnig = randomEnigma(4,10)
-
-listSol = test_solver(rdEnig, 4)
-print(rdEnig)
 
 # %% Section 6 : énigmes aléatoires, puis retouchées 'à la main'
 

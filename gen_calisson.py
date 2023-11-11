@@ -196,8 +196,26 @@ def encodage(jeu):
                     lc.append(((i,j,k),ec))
     return lc
 
+def encodeSolution(encJeu):
+    # calcule l'encodage de la solution à partir de l'encodage du jeu
+    # On récupère l'ensemble des arêtes encodées pour tous les cubes de
+    # l'empilement puis on les regroupe dans un ensemble pour éviter les
+    # doublons.
+    # On retourne la liste correspondante
+    s = set()
+    for p in encJeu:
+        for c in p[1]:
+            s.add(c)
+    return list(s)
 
 def randomEnigma(n, konfig = []):
+    """
+    Pour une dimension de jeu valant n, génération d'un empilement, d'une énigme et de la solution.
+
+    Retourne l'énigme, la configuration de l'empilement et la solution
+    L'énigme et la solution sont sous la forme d'une liste de triplets (X,Y,direction) précisant
+    les arêtes à dessiner dans la zone de jeu
+    """
     # création d'un empilement aléatoire
     if konfig == []:
         konfig = make_random_config(n)
@@ -205,6 +223,8 @@ def randomEnigma(n, konfig = []):
     jeu = matrice_jeu(konfig)
     # encodage 2D des arêtes
     encJeu = encodage(jeu)
+    # encodage de la solution sous la même forme que l'énigme
+    encSol = encodeSolution(encJeu)
 
     # tirage de l'énigme
     # idée :
@@ -219,18 +239,25 @@ def randomEnigma(n, konfig = []):
             enigme.extend(c[1])
 
     enigme = list(set(enigme))
-    return (enigme, konfig)
+    return (enigme, konfig, encSol)
+
+
 
 
 # %% tests
-n=5
-enigme, konf = randomEnigma(n)
-print(enigme)
+"""
+n=3
+enigme, konf, sol = randomEnigma(n)
 
 # représentation du jeu en cours
 from calisson import draw_config
 draw_config(matrice_jeu(konf))
 
-from calisson import test_solver, listCoord3D, draw_config
+from calisson import test_solver, doSolve, listCoord3D, draw_config
 
 test_solver(enigme, n)
+
+print(f'enigme = {enigme}')
+print(f'solution = {sol}')
+
+"""

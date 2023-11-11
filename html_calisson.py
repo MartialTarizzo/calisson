@@ -346,3 +346,50 @@ enigme = \
 
 test_solver(enigme,6)
 
+## 448 : deux solutions ...
+orgurl = "https://mathix.org/calisson/index.html?tab=fffffffstfffsstffsfffsfsfsfssfsfsffsffsssfsffsffsftfffsftfsffsfsfftfsffsssfsfffftfsssffsftfsffsfftffsftfsssftfffsfftffffssftsssfsffffssftffsfftfsfffssfsftffsfffffffftsfffssffsfffsffsfffffsfstffffsffsffffffsfttffffstfsfssfftssfsfffsffssftsfsfstssfsfffsfftffffssftfffffsffffffsstsftffffsfsfsfsfftssssfsffsfsf448"
+dim, enigme = make_enigma_from_url(orgurl)
+
+test_solver(enigme, dim)
+
+
+## 447 incomplète ... 1 cube indéterminé
+orgurl = "https://mathix.org/calisson/index.html?tab=fffffffstfffffstssfffsffsffffffssfsftsfsfsftfssfffffssfssssfsffsfffsssffsftfsffstfssfftfssssfsfffsffsfssftfsfstssfsffffsffffffsfsfftfsfftffffsfssfffsffsffffsfffffftsffffffsssfsfsfstfffssffsftssssfffsfftfffffssftftsftfsfssfffsfftsfssssfsffsfsfssffsftfsffsffftftfsfffffsfffsssssffftfffffsftsffffsffffffssftfs447"
+
+
+dim, enigme = make_enigma_from_url(orgurl)
+
+
+enigme = [(-4, 8, 'y'),
+ (-1, 7, 'z'),
+ (-2, 4, 'z'),
+ (-4, 4, 'y'),
+ (-3, 1, 'x'),
+ (-5, -1, 'x'),
+ (-1, 1, 'x'),
+ (-1, -3, 'z'),
+ (-3, -3, 'x'),
+ (-4, -8, 'z'),
+ (-1, -7, 'z'),
+ (3, 7, 'z'),
+ (4, 6, 'y'),
+ (1, 7, 'x'),
+ (5, 1, 'z'),
+ (2, 4, 'x'),
+ (3, 1, 'z'),
+ (4, 0, 'z'),
+ (2, 2, 'x'),
+ (4, -2, 'y'),
+ (1, -3, 'z'),
+ (2, -2, 'y'),
+ (3, -7, 'z'),
+ (1, -5, 'x'),
+ (1, -11, 'z')
+
+# une des lignes ci-dessous lève l'indétermination
+# ,(0,2,"z")
+# ,(0,4,"z")
+#,(-1,3,"y")
+,(-1,3,"z")
+]
+test_solver(enigme, dim)

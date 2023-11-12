@@ -1,8 +1,19 @@
+# %% Jeu du calisson
+# gen_calisson.py : fonctions de génération automatique d'énigme
+#
+# ============================================================================
+# Auteur : Martial Tarizzo
+#
+# Licence : CC BY-NC-SA 4.0 DEED
+# https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr
+# ============================================================================
+
+
 import math
 import random as rd
 import numpy as np
 
-from calisson import projection
+from calisson import projection, doSolve
 
 # %% Section 1 : génération d'un empilement
 # --------------------------------------------
@@ -59,9 +70,8 @@ def make_config(n, nbCubes):
         k = rd.choice(lk)
     return k, f
 
-# Changement de modélisation de la configuration pour faciliter le tracé
-# La section 1 représente le jeu par une matrice n x n.
-# Cette représentation compacte n'est pas commode pour le tracé.
+# La représentation précédente (matrice n x n) de l'empilement est commode pour le générer,
+#  mais n'est pas commode pour le tracé et la résolution.
 # On va changer pour une matrice de dimension 3 : n x n x n
 # Les arêtes des petits cubes sont donc de longueur 1.
 # Chaque élément de la matrice est un entier dans {-1,0,+1} indiquant l'état
@@ -79,20 +89,21 @@ def matrice_jeu(konfig):
                 jeu[i, j, k] = 1
     return jeu
 
-def make_random_config(n):
+def make_random_config(n, nbCubes = 0, trace = False):
     """
     retourne une configuration aléatoire pour un jeu
-    de dimension n
+    de dimension n contenant m cubes
     """
-    # nombre de cubes dans la configuration
-    nbCubes = rd.randint(n**3//3, 2*n**3//3)
-    print(f"on a {nbCubes} cubes dans la configuration")
+    # nombre de cubes dans la configuration, tiré au hasard entre n^3/3 et n^3/2 si non fourni
+    if nbCubes == 0:
+        nbCubes = rd.randint(n**3//3, 2*n**3//3)
+        if trace: print(f"on a {nbCubes} cubes dans la configuration")
 
     k, f = make_config(n, nbCubes)
-    print(k, f)
+    if trace : print(k, f)
     return k
 
-# %% Génération d'un énigme
+# %% section 2 : Génération d'un énigme
 """
 idée : reprendre le code de dessin, mais encoder les arêtes plutôt que de les dessiner
 """
@@ -208,13 +219,29 @@ def encodeSolution(encJeu):
             s.add(c)
     return list(s)
 
-def randomEnigma(n, konfig = []):
+def randomEnigma(n, konfig = [], trace = False):
     """
     Pour une dimension de jeu valant n, génération d'un empilement, d'une énigme et de la solution.
+    konfig est une matrice de dimension 2 (n x n) représentant un empilement (cf section 1)
 
     Retourne l'énigme, la configuration de l'empilement et la solution
     L'énigme et la solution sont sous la forme d'une liste de triplets (X,Y,direction) précisant
-    les arêtes à dessiner dans la zone de jeu
+    les arêtes à dessiner dans la zone de jeu.
+
+    La durée d'exécution de la fonction peut être assez longue si n est grand car l'énigme retournée
+    est nécessairement correcte : solution unique sans indétermination.
+    Ceci est assuré à l'aide d'une méthode basique essai/erreur :
+    - génération aléatoire de l'énigme
+    - tentative de résolution
+
+    L'énigme n'est pas nécessairement 'subtile', aucun indice de difficulté n'est actuellement
+    implémenté...
+    Ça donne parfois (souvent) des énigmes assez faciles, ayant trop de segments,qu'on peut alors
+    retoucher :
+    - imprimer l'énigme
+    - modifier/supprimer des segments
+    - résoudre l'énigme retouchée pour voir si ça marche
+    - recommencer jusqu'à satisfaction !
     """
     # création d'un empilement aléatoire
     if konfig == []:
@@ -228,36 +255,54 @@ def randomEnigma(n, konfig = []):
 
     # tirage de l'énigme
     # idée :
-    # - pour chaque cube visible ayant plusieurs arêtes, en prendre une au hasard
-    # - si le cube n'a qu'une arête visible, proba p d'être sélectionnée
-    enigme = []
-    p = 0.5
-    for c in encJeu:
-        if len(c[1])>1: # plusieurs arêtes
-            enigme.extend(rd.choices(c[1], k=1))
-        elif rd.random() > p:
-            enigme.extend(c[1])
+    # - pour chaque cube visible ayant plusieurs arêtes, en prendre une ou deux au hasard
+    #   selon la proba p
+    # - si le cube n'a qu'une arête visible, proba p d'être sélectionnée pour éviter
+    #   d'avoir de longues lignes en cas d'empilement de cubes pour lesquels une seule
+    #   arête est visibles (cubes alignés verticalement en colonne par ex.)
+    #
+    # les probas p calculées dépendent de la taille du jeu et du nombre d'essais de
+    # résolution. Plus la résolution est difficile (n grand, nombre d'essais grand)
+    # plus la proba d'ajouter des arêtes dans l'énigme augmente.
+    #
+    # On vérifie que l'énigme ne possède qu'une seule solution sans indétermination.
 
-    enigme = list(set(enigme))
+    nEssai = 1
+    while True:
+        if trace : print(f"Essai n°{nEssai}")
+        enigme = []
+        for c in encJeu:
+            if len(c[1])>1: # plusieurs arêtes possibles
+                p = 0.5 - nEssai/(1+nEssai) # proba d'en prendre 2
+                if rd.random() < p:
+                    enigme.extend(rd.choices(c[1], k=2))
+                else: # on n'en prend qu'une !
+                    enigme.extend(rd.choices(c[1], k=1))
+            else: # une seule arête à dessiner
+                p = 0.6 + 0.4 * nEssai/(1+nEssai) - 1/n #  à ajuster par l'expérience ...
+                if rd.random() < p:
+                    enigme.extend(c[1])
+
+        enigme = list(set(enigme))
+        # lancement de la résolution
+        lres = doSolve(enigme, n)
+        # une seule solution complète ?
+        if (len(lres) == 1) and not (-1 in lres[0]):
+            break
+        nEssai+=1
     return (enigme, konfig, encSol)
 
 
 
 
-# %% tests
+# %% test : décommenter cette section ##
 """
-n=3
-enigme, konf, sol = randomEnigma(n)
+#--------- génération auto----------
+n = 6
+enigme, konf, sol = randomEnigma(n, trace = True)
 
-# représentation du jeu en cours
-from calisson import draw_config
-draw_config(matrice_jeu(konf))
-
-from calisson import test_solver, doSolve, listCoord3D, draw_config
-
+# recherche de la solution de l'énigme
+from calisson import test_solver
 test_solver(enigme, n)
-
-print(f'enigme = {enigme}')
-print(f'solution = {sol}')
-
+# -----------------------------
 """

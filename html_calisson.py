@@ -1,78 +1,24 @@
-"""
-Le code d'origine du fichier javascript traçant les différents segments de la figure
-
-but : transformer ce code en python
-
-v1x = -Math.sqrt(3) * longueur / 2
-v1y = longueur / 2;
-v2x = 0;
-v2y = longueur;
-v3x = Math.sqrt(3) * longueur / 2
-v3y = longueur / 2;
-centrex = Math.sqrt(3) / 2 * longueur * taille + marge
-centrey = marge;
- for (j = 0; j < 2 * taille; j++) {
-            for (i = 0; i < Math.min(taille + 1, 2 * taille - j); i++) {
-                k = 0;
-                if ((j > 0) && (i < taille)) {
-                    tabsegment.push([
-                        [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
-                        [centrex + (i + 1) * v1x + j * v2x + k * v3x, centrey + (i + 1) * v1y + j * v2y + k * v3y]
-                    ])
-                }
-                if (i < taille) {
-                    tabsegment.push([
-                        [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
-                        [centrex + i * v1x + (j + 1) * v2x + k * v3x, centrey + i * v1y + (j + 1) * v2y + k * v3y]
-                    ])
-                }
-                if (i > 0) {
-                    tabsegment.push([
-                        [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
-                        [centrex + i * v1x + j * v2x + (k + 1) * v3x, centrey + i * v1y + j * v2y + (k + 1) * v3y]
-                    ])
-                }
-            }
-        }
-
-partie droite
-for (j = 0; j < 2 * taille; j++) {
-        for (k = 0; k < Math.min(taille + 1, 2 * taille - j); k++) {
-
-            i = 0;
-
-            if ((j > 0) && (k < taille)) {
-                tabsegment[cpt] = [
-                    [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
-                    [centrex + i * v1x + j * v2x + (k + 1) * v3x, centrey + i * v1y + j * v2y + (k + 1) * v3y]
-                ];
-            }
-            if ((k < taille) && (k > 0)) {
-
-                tabsegment[cpt] = [
-                    [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
-                    [centrex + i * v1x + (j + 1) * v2x + k * v3x, centrey + i * v1y + (j + 1) * v2y + k * v3y]
-                ];
-            }
-            if (k > 0) {
-
-                tabsegment[cpt] = [
-                    [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
-                    [centrex + (i + 1) * v1x + j * v2x + k * v3x, centrey + (i + 1) * v1y + j * v2y + k * v3y]
-                ];
-}
-v1x = -longueur
-v1y = longueur;
-v2x = 0;
-v2y = 2*longueur;
-v3x = longueur
-v3y = longueur;
-"""
+# html_calisson.py : fonctions d'interfaçage avec le site web de calisson
+#
+# ============================================================================
+# Auteur : Martial Tarizzo
+#
+# Licence : CC BY-NC-SA 4.0 DEED
+# https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr
+# ============================================================================
+from calisson import projection, doSolve
+from gen_calisson import encodage, encodeSolution
+import os, webbrowser, re
 
 def make_tab_segments(taille=3):
     """
     retourne la liste de tous les segments traçables avec la syntaxe utilisée pour l'encodage
     des énigmes.
+
+    Le code de cette fonction reprend du code contenu dans le fichier javascript
+    traçant les différents segments de la figure.
+    (voir la fonction  miseajourpointencours de javascript.js par exemple)
+
     La liste est dans l'ordre du tracé des segments dans le code JS : ceci est important
     car le programme web se sert de la position dans une chaîne pour connaître le status
     d'une arête
@@ -87,9 +33,9 @@ def make_tab_segments(taille=3):
 
     tabsegment = []
 
-    # tout ce qui suit n'est qu'une reprise du code JS, avec simplifications
-    # car des variables sont inutiles (constamment nulles ...), et mes coordonnées
-    # sont entières
+    # tout ce qui suit n'est qu'une reprise du code JS avec simplifications
+    # car des variables sont inutiles (constamment nulles ...),
+    # et mes coordonnées sont entières
 
     # partie gauche
     for j in range(2*taille):
@@ -149,24 +95,20 @@ def make_tab_segments(taille=3):
     return l
 
 
-# la chaîne argument de la page web est de la forme suivante (arène de jeu de taille 3):
+# la chaîne argument de la page web est de la forme suivante (pour une grille de taille 3):
 # "fffssfsffsfsftssfsssfsfffttfsffsssftfsftsffffsfssffsftssfsffftfsffssfsfs33301"
 # t -> arête fixée non modifiable  <=> arête de l'énigme toujours affichée dans la page web
 # s -> arête de la solution, non affichée (ça serait trop facile !)
 # f -> arête ne faisant pas partie de la solution
-# les chiffres à la fin ne sont qu'une référence ver le numéro de l'énigme (ne servent à rien ici)
+# les chiffres à la fin ne sont qu'une référence vers le numéro de l'énigme : ils
+# ne servent à rien ici.
 
-from calisson import doSolve, projection
-from gen_calisson import encodage, encodeSolution
-import os, webbrowser
 
 # fonction qui transforme une énigme python en une chaîne d'url ayant le bon format
 # pour le script JS de la page de mathix.org
 # il suffit alors, sous python, d'invoquer qque chose du genre :
-
-# url = make_url(enigme, 5)
-# webbrowser.open(url)
-
+#   url = make_url(enigme, 5)
+#   webbrowser.open(url)
 # pour avoir la page de résolution de l'énigme qui s'ouvre dans son navigateur
 def make_url(enigme, dim):
     """
@@ -206,7 +148,6 @@ def make_url(enigme, dim):
 
     return 'https://mathix.org/calisson/index.html?tab=' + str
 
-
 # remarque :
 # si on tente d'ouvrir une adresse locale du genre :
 # command = 'file://' + os.getcwd() + "/calisson_js/calisson.html?tab=" + str
@@ -221,8 +162,6 @@ def make_url(enigme, dim):
 # Par contre, pas de problème pour une adresse web réelle.
 # C'est la raison pour laquelle "https://mathix.org/calisson/index.html?tab="
 # est utilisée dans la fonction précédente
-
-import re
 
 def make_enigma_from_url(orgurl):
     """
@@ -264,11 +203,16 @@ def make_enigma_from_url(orgurl):
 
     return dim, enigme
 
+"""
+## pour tester, évaluer la ligne suivante :
 
-## pour tester
-from calisson import test_solver
+from calisson import test_solver # pour afficher la résolution à côté de la page web
 
-# une engime de niveau 5, difficile, n'ayant qu'une solution
+# puis évaluer une à une les sections de code entre les lignes avec ----------------------
+
+# ----------------------
+
+# une énigme perso de niveau 5, difficile, n'ayant qu'une solution
 enigme = [(-2, 0, 'x'), (2, -2, 'x'), (-2, -2, 'y'), (-1, 7, 'y'), (2, -4, 'y'),
 (-3,3,'z'),
 (-4,-4,'y'),
@@ -290,15 +234,20 @@ webbrowser.open(url)
 # affichage de la resolution auto de l'énigme
 test_solver(enigme,5)
 
-## énigme 459 (correcte)
-import re
+# ----------------------
+
+# énigme 459 (correcte)
 
 orgurl = "https://mathix.org/calisson/index.html?tab=ffffftsfffffffsssfsffsfffffffffssftffssftftsffffsfftfssffsffsffffffsfsffsffsftfsfssfsfffttftfffffstfssffffsfffffsffsffsffsssftfffsffsffsfsfffffsffsstftffssfsffffffssffffffsstfsfsftsfffstfffsfsffsfffsffsffftfsfssffffsfsfsssfsfsftsfftssfsffsffffffffssftffsfssffftfssffsfffftsffffssfsfftsftfffsffssstsfsffsfsf459"
+
+webbrowser.open(orgurl)
 
 dim, enigme = make_enigma_from_url(orgurl)
 test_solver(enigme, dim)
 
-## grille 455 mathix incorrecte (non entièrement déterminée)
+# ----------------------
+
+# grille 455 mathix incorrecte (non entièrement déterminée)
 orgurl = "https://mathix.org/calisson/index.html?tab=fffffffssffffffffsstftfftfffffssfsfsfsffssfsfssfsfsssftftsffsffsfffsftffsffsfftfsfssfsfsffsfsfssssfsfffttfstssfsftfsffsssfsftfssssftfsfsssfsfsfsffsftffffffffffffffffffstfffffstssfffsfsfsssfsfsfstfffffffsfssstsffsfffsffffffftffffffffsfffffffsffffffffsffffffsfstfffssfsffffssfffsftfsffsssffstsfsfsftfsfssffff455"
 
 # ce qui donne :
@@ -331,10 +280,10 @@ enigme = \
 
  # deux exemples de levée d'indétermination
  # Exemple 1
- ,
- (0,-6,"z"),
- (5,-3,"z"),
- (4,2,"y"),
+ # ,
+ # (0,-6,"z"),
+ # (5,-3,"z"),
+ # (4,2,"y"),
 
  # Exemple 2
  # ,
@@ -344,21 +293,29 @@ enigme = \
  #
  ]
 
+webbrowser.open(orgurl)
+
 test_solver(enigme,6)
 
-## 448 : deux solutions ...
+# ----------------------
+
+## grille 448 : deux solutions ... différentes en bas à droite
 orgurl = "https://mathix.org/calisson/index.html?tab=fffffffstfffsstffsfffsfsfsfssfsfsffsffsssfsffsffsftfffsftfsffsfsfftfsffsssfsfffftfsssffsftfsffsfftffsftfsssftfffsfftffffssftsssfsffffssftffsfftfsfffssfsftffsfffffffftsfffssffsfffsffsfffffsfstffffsffsffffffsfttffffstfsfssfftssfsfffsffssftsfsfstssfsfffsfftffffssftfffffsffffffsstsftffffsfsfsfsfftssssfsffsfsf448"
+
+webbrowser.open(orgurl)
+
 dim, enigme = make_enigma_from_url(orgurl)
 
 test_solver(enigme, dim)
 
+# ----------------------
 
-## 447 incomplète ... 1 cube indéterminé
+# 447 incomplète ... 1 cube indéterminé
 orgurl = "https://mathix.org/calisson/index.html?tab=fffffffstfffffstssfffsffsffffffssfsftsfsfsftfssfffffssfssssfsffsfffsssffsftfsffstfssfftfssssfsfffsffsfssftfsfstssfsffffsffffffsfsfftfsfftffffsfssfffsffsffffsfffffftsffffffsssfsfsfstfffssffsftssssfffsfftfffffssftftsftfsfssfffsfftsfssssfsffsfsfssffsftfsffsffftftfsfffffsfffsssssffftfffffsftsffffsffffffssftfs447"
 
+webbrowser.open(orgurl)
 
 dim, enigme = make_enigma_from_url(orgurl)
-
 
 enigme = [(-4, 8, 'y'),
  (-1, 7, 'z'),
@@ -387,9 +344,13 @@ enigme = [(-4, 8, 'y'),
  (1, -11, 'z')
 
 # une des lignes ci-dessous lève l'indétermination
-# ,(0,2,"z")
-# ,(0,4,"z")
+#,(0,2,"z")
+#,(0,4,"z")
 #,(-1,3,"y")
-,(-1,3,"z")
+#,(-1,3,"z")
 ]
 test_solver(enigme, dim)
+
+# ----------------------
+
+"""

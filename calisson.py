@@ -1,9 +1,25 @@
 # %% Jeu du calisson
+# calisson.py : fonctions de représentation graphique et de résolution
+#
+# ============================================================================
+# Auteur : Martial Tarizzo
+#
+# Licence : CC BY-NC-SA 4.0 DEED
+# https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr
+# ============================================================================
+
 """" Pour la présentation et les règles du jeu, cf https://mathix.org/calisson/blog/
 
 Contrairement à la présentation par 'calissons', on adopte ici la modélisation
 3D de l'empilement des cubes dans une zone de rangement cubique, dont le côté
 est de taille n.
+
+Un empilement de cubes sera représenté par une matrice de dimension 3 : n x n x n
+contenant des entiers dans {-1, 0, +1} représentant trois états possibles.
+La signification de chaque élément de matrice est la suivante :
+-1 -> cube indéterminé
+0  -> absence de cube
++1 -> cube présent
 """
 
 # Imports pour la suite
@@ -13,7 +29,7 @@ import numpy as np
 
 
 
-# %% Section 2 : Représentation graphique d'une configuration
+# %% Section 1 : Représentation graphique d'une configuration
 # ------------------------------------------------------------
 # sortie graphique sans interaction : on utilise pyplot pour faire simple
 
@@ -189,23 +205,23 @@ def draw_config(jeu):
     n = jeu.shape[0]
     plt.figure(figsize=(6, 6))
     # l'aspect sqrt(2/6) est nécessaire en raison de la simplification
-    # du calcul des projections (cf fonction 'projection)
+    # du calcul des projections (cf fonction 'projection')
     plt.subplot(111,adjustable='box', aspect=1/np.sqrt(3))
     #plt.axis('equal')
     drawHex(n)
     drawAxes(jeu)
     for i in range(n):
         for j in range(n):
-            for kk in range(n):
-                projCube(jeu, i, j, kk)
+            for k in range(n):
+                projCube(jeu, i, j, k)
     plt.show()
 
 
-# %% Section 3 : RECHERCHE DE LA SOLUTION D'UNE ENIGME
-#  ##########################
+# %% Section 2 : RECHERCHE DE LA SOLUTION D'UNE ENIGME
+#  ---------------------------------------------------
 
 # --------------------------
-# 3.1 : Codage d'une énigme
+# 2.1 : Codage d'une énigme
 # --------------------------
 # Évidemment, ce codage doit être exprimé en 2D dans le plan de la projection
 # orthographique.
@@ -215,7 +231,7 @@ def draw_config(jeu):
 # à la suivante.
 # En raison de la projection, la base est orthogonale, mais pas normée !
 # Exemple : le suivi d'une arête de face supérieure d'un petit cube fait varier
-# X et Y d'un unité, le suivi d'une arête verticale fait varier et Y de 2 sans
+# X et Y d'un unité, le suivi d'une arête verticale fait varier Y de 2 sans
 # changer X.
 
 # passage de (X,Y)->[((x,y,z), ...]
@@ -251,7 +267,7 @@ def listCoord3D(X, Y, n):
 # ((0,2,"z"), (0,0,"x"), (1,1,"x"))
 
 # --------------------------
-# 3.2 : Résolution d'un énigme
+# 2.2 : Résolution d'un énigme
 # --------------------------
 # codage du jeu :
 # matrice M [i,j,k] représentant canoniquement la présence d'un petit cube
@@ -268,12 +284,13 @@ def listCoord3D(X, Y, n):
 # C'est la fonction fondamentale de prise en compte des contraintes
 # Elle opére en deux étapes :
 # - vérification de la cohérence du sommet en cours de placement avec ce qui existe déjà
-# - si on peut ajouter le sommet, prise en compte des contraintes afin de fixer la valeur
-#   des cubes dépendant des arêtes centrées sur le sommet
+# - si on peut ajouter le sommet, modification de la matrice en prenant en compte les contraintes
+#  afin de fixer la valeur des cubes dépendant des arêtes centrées sur le sommet
 def placeSommet(xs, ys, zs, d, M):
     """Arguments :
-    xs, ys, zs -> coordonnées 3D d'un sommet de l'énigme
-    d -> la chaîne indiquant la présence ou non d'un arête
+    xs, ys, zs -> coordonnées 3D d'un sommet s de l'énigme
+    d -> la chaîne indiquant la direction de l'arête à partir de s ("x" ou "y" ou "z")
+         (la chaîne peut contenir plusieurs arêtes : "xz" par exemple)
     M -> matrice représentant l'état courant du jeu
     Valeur de retour :
     couple (r , M')
@@ -416,12 +433,12 @@ def placeSommet(xs, ys, zs, d, M):
                 Mp[:xs, :ys+1, :zs+1] = 1
                 Mp[:xs+1, :ys+1, :zs] = 1
 
-    # fin de la fonction
+    # fin de la fonction : le sommet s a été placé avec succès, modifs enregistrées dans Mp
     return (True, Mp)
 
-# %% Section 4 : Résolution
+# %% Section 3 : Résolution
 
-""" # 4.1 : pour jouer à la main, étape par étape
+""" # 3.1 : pour jouer à la main, étape par étape
 n = 2
 #enigme = ((0, 2, "z"), (0, 0, "x"), (1, 1, "x"))
 enigme = ((0, 0, "x"), (1, 1, "x"), (0, 2, "z"))
@@ -450,13 +467,13 @@ print(r, M1)
 
 draw_config(M1) """
 
-# Existe-t-il des énigmes pour lesquelles plus de 2 passes soient nécessaires ???
+# Existe-t-il des énigmes pour lesquelles plus de 2 passes soient nécessaires ?
 # Ça paraît probable, si la taille du jeu est plus grande.
 
 # L'idée sera donc de rechercher un point fixe en répétant les placement de sommets
 # jusqu'à ce que la configuration n'évolue plus, ce qui est fait dans la section suivante.
 
-# 4.2 : Résolution de l'enigme
+# 3.2 : Résolution de l'enigme
 
 # fonction utilitaire, pour simplifier la saisie des énigmes
 def trans2D_3D(enigme, n):
@@ -477,15 +494,18 @@ def trans2D_3D(enigme, n):
     return (enig3)
 
 
-# Le solveur : automatisation de la recherche d'un point fixe représentant la solution
-def solve(lc3D, M, lr, p=0, trace = False):
+# Le solveur : force brute !
+# fonction récursive qui essaie de placer toutes les arêtes désignés par l'énigme
+# jusqu'à épuisement du stock.
+def solve(lc3D, M, lr, p = 0, trace = False):
     """
     Args :
     - lc3d est une liste de contraintes 3D représentant l'énigme
     - M est la matrice de représentation du jeu
     - lr est la liste modifiée par effet de bord, contenant les matrices solutions
     - p est le niveau de récursion, utilisé pour les impressions de traçage.
-    - trace = True provoque l'impression des infos de traçage
+    - trace = True provoque l'impression des infos de traçage. Ralentit fortement la résolution
+      en raison des impressions dans la console (qui peuvent être très nombreuses !)
 
     """
     if lc3D == []:
@@ -500,7 +520,7 @@ def solve(lc3D, M, lr, p=0, trace = False):
         else:
             if trace : print("--"*(p+1), c)
 
-
+# automatisation de la recherche des points fixes
 def doSolve(enigme, n, trace = False):
     """
     Gestion du solveur : la fonction solve retourne une liste de résultats possibles.

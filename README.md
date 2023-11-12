@@ -1,7 +1,7 @@
 # Résolution du jeu du calisson
 
-## présentation du jeu
-Pour une présentation du jeu, voir le site du créateur du jeu Olivier Longuet, accessible ici :
+## Le jeu du calisson
+Pour une présentation du jeu, voir le site du créateur Olivier Longuet, accessible ici :
 [Le jeu du calisson](https://mathix.org/calisson/blog/)
 ## Présentation du projet
 Le but est ici d'automatiser la résolution et la conception de grilles de jeu, à l'aide de quelques programmes Python.
@@ -16,7 +16,7 @@ Les fonctions contenues dans ces fichiers ne permettent pas l'interactivité fou
 - résoudre une énigme (générée automatiquement, faite 'à la main', récupérée sur le site mathix) et représenter graphiquement la solution
 - lancer l'interface de résolution d'une énigme sur le site mathix 
 
-## les différents fichiers
+## Les différents fichiers
 Seuls les fichiers python (*.py) sont intéressants à télécharger, afin de pouvoir les exécuter dans son nvironnement de développement favori.
 - calisson.py : contient les fonctions de représentation graphique ainsi que celles permettant la résolution d'une énigme
 - gen_calisson.py : contient les fonctions permettant la génération automatique (et aléatoire) d'un empilement ainsi que d'une énigme

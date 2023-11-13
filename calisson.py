@@ -441,7 +441,7 @@ def placeSommet(xs, ys, zs, d, M):
     Mp = M.copy()  # copie de M
 
     # trait vertical (selon z)
-    if "z" in d:
+    if d == "z":
         if zs == n:  # arête en dehors de la zone de jeu
             return (False, M)
         # aucun cube (x,y,z) avec x<xs & y<ys & z<=zs ne doit être vide
@@ -499,7 +499,7 @@ def placeSommet(xs, ys, zs, d, M):
     # valide est aussi valide
     # on a donc deux fois le code ci-dessus, aux permutations de x, y, z près
     # C'est un peu long et il faut faire attention, mais rien de nouveau
-    if "x" in d:    # on permute le code de "z", dans le sens direct (x->y->z->x)
+    if d == "x":    # on permute le code de "z", dans le sens direct (x->y->z->x)
         if xs == n:
             return (False, M)  # pas possible
         if (0 in M[:xs+1, :ys, :zs]) or (1 in M[xs:, ys:, zs:]):
@@ -535,7 +535,7 @@ def placeSommet(xs, ys, zs, d, M):
             elif Mp[xs, ys-1, zs] == 1:
                 Mp[:xs+1, :ys+1, :zs] = 1
                 Mp[:xs+1, :ys, :zs+1] = 1
-    if "y" in d:    # on permute le code de "z", dans le sens indirect (x<-y<-z<-x)
+    if d == "y":    # on permute le code de "z", dans le sens indirect (x<-y<-z<-x)
         if ys == n:
             return (False, M)  # pas possible
         if (0 in M[:xs, :ys+1, :zs]) or (1 in M[xs:, ys:, zs:]):
@@ -555,7 +555,7 @@ def placeSommet(xs, ys, zs, d, M):
         Mp[:xs, :ys+1, :zs] = 1
         Mp[xs:, ys:, zs:] = 0
         if zs == 0:
-            Mp[0, :ys+1, :zs] = 1
+            Mp[:xs, :ys+1, 0] = 1
         if xs == 0:
             Mp[0, :ys+1, :zs] = 1
         if zs == n:

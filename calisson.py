@@ -756,6 +756,7 @@ def draw_solutions(enigma, n, lSols, cellSize = 4, file = None):
     - lSols : liste des solutions trouvées
     - cellSize : taille d'une cellule (<-> 1 subplot) affichant l'énigme
       ou une solution
+    - file : nom du fichier de sortie. Si = None, ouverture d'une fenêtre graphique
     """
     # Remarque : dans les fonctions de tracé, l'aspect sqrt(2/6) est nécessaire
     # en raison de la simplification du calcul des projections

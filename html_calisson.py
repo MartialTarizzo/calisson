@@ -280,10 +280,10 @@ enigme = \
 
  # deux exemples de levée d'indétermination
  # Exemple 1
- # ,
- # (0,-6,"z"),
- # (5,-3,"z"),
- # (4,2,"y"),
+ ,
+ (0,-6,"z"),
+ (5,-3,"z"),
+ (4,2,"y"),
 
  # Exemple 2
  # ,
@@ -352,5 +352,6 @@ enigme = [(-4, 8, 'y'),
 test_solver(enigme, dim)
 
 # ----------------------
+
 
 """

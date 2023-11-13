@@ -251,11 +251,9 @@ def listCoord3D(X, Y, n):
 #  Codage des arêtes
 # L'ensemble des arêtes de l'énigme est codé ainsi :
 # - coordonnées du point X,Y dans le plan de projection
-# - chaîne de 1 à 3 caractères indiquant la présence d'une arête dans la direction
+# - chaîne de 1 caractère indiquant la présence d'une arête dans la direction
 #   de la projection des axes 3D (x,y,z) à partir de (X,Y)
 #   Ex : "x" -> arête dans la direction x
-#        "zy" -> arêtes dans les directions y et z
-#        "xyz" -> arêtes dans les 3 directions !
 #
 #   En projection, ça ressemble donc à une étoile Mercedes
 #     |
@@ -266,8 +264,149 @@ def listCoord3D(X, Y, n):
 # est donc codée ainsi :
 # ((0,2,"z"), (0,0,"x"), (1,1,"x"))
 
+
 # --------------------------
-# 2.2 : Résolution d'un énigme
+# 2.2 : encodage sous forme concrète
+# --------------------------
+"""
+idée : reprendre le code de dessin, mais encoder concrètement les arêtes
+sous a forme précédente plutôt que de les dessiner.
+"""
+# encodage d'un petit cube de coordonnées 3D [i,j,k]
+# On tient compte de l'environnement du cube pour n'encoder que les arêtes
+# nécessaires.
+def encodeCube(jeu, i, j, k):
+    """
+    jeu : matrice 3D représentant l'empilage de cubes
+    i,j,k : coordonnées 3D de l'origine du petit cube
+
+    retourne la liste des arêtes visibles dans la configuration du jeu, avec la
+    syntaxe pour chaque arête correspondant à celle de l'énigme :
+    (X, Y, d) <-> coordonnées 2D et direction de l'arête
+    """
+    n = jeu.shape[0]
+    def c(i, j, k):
+        """ test de la présence d'un cube aux coordonnées [i,j,k]
+        Avec prise en compte des bords pour contrôler le tracé des arêtes.
+        """
+        if i < 0 or j < 0:
+            return True
+        if k < 0:
+            return True
+        if k == n:
+            return False
+        if i == n or j == n:
+            return False
+        return jeu[i, j, k]  # on n'est pas sur un bord
+
+    # la liste des arêtes 3D retournées pour le cube courant
+    lar = []
+
+    if jeu[i, j, k] == 1: # cube certain
+
+        # SA est le sommet d'origine du cube, jamais visible.
+        # S1 .. S7 désigne les 7 sommets potentiellement visibles
+        # S1..S4 sont les 4 sommets de la face supérieure
+        # S5..S7 sont les 3 sommets de la face inférieure
+        # on n'encode les lignes entre les différents sommets que si
+        # elles sont nécessaires, ce qui dépend de la présence des autres cubes
+        # au voisinage du cube courant.
+        # L1 : ligne entre S1 et S2
+        if c(i, j-1, k+1) and not c(i, j, k+1):
+            lar.append((i,j,k+1,"x"))
+        # L2 : S2-S3
+        if not c(i+1, j, k) and not c(i, j, k+1):
+            lar.append((i+1,j,k+1,"y"))
+        # L3 : S3-S4
+        if not c(i, j+1, k) and not c(i, j, k+1):
+            lar.append((i,j+1,k+1,"x"))
+        # L4 : S4-S1
+        if not c(i, j, k+1) and c(i-1, j, k+1):
+            lar.append((i,j,k+1,"y"))
+        # L5 : S2-S5
+        if not c(i+1, j, k) and c(i+1, j-1, k):
+            lar.append((i+1,j,k,"z"))
+        # L6 : S3-S6
+        if (not c(i+1, j, k) and not c(i, j+1, k)) or \
+                (c(i+1, j, k) and c(i, j+1, k) and not c(i+1, j+1, k)):
+            lar.append((i+1,j+1,k,"z"))
+        # L7 : S4-S7
+        if not c(i, j+1, k) and c(i-1, j+1, k):
+            lar.append((i,j+1,k,"z"))
+        # L8 : S5-S6
+        if not c(i+1, j, k) and c(i+1, j, k-1):
+            lar.append((i+1,j,k,"y"))
+        # L9 : S6-S7
+        if not c(i, j+1, k) and c(i, j+1, k-1):
+            lar.append((i,j+1,k,"x"))
+
+    # conversion en 2D, en éliminant les arêtes tracées le long des bords du grand cube
+    lar2 = []
+    for (x,y,z,d) in lar:
+        if not( # les arêtes suivantes sont le long du tracé de l'hexagone englobant->ne pas encoder
+            (x==0 and ((z==n and d=='y') or (y==n and d=='z'))) or
+            (y==0 and ((x==n and d=='z') or (z==n and d=='x'))) or
+            (z==0 and ((y==n and d=='x') or (x==n and d=='y'))) ) :
+            X,Y = projection([x,y,z])
+            lar2.append((X,Y,d))
+
+    return lar2
+
+def encodage(jeu):
+    """
+    arg : jeu est la matrice 3D décrivant l'empilement
+    la fonction retourne une liste de doublets (coord,liste_arêtes) pour tous les cubes
+    dont certaines arêtes sont visibles.
+    - coord est un triplet (i,j,k) donnant l'origine du cube
+    - liste_arêtes est une liste contenant les arêtes correspondantes, sous la forme
+      dans l'énigme (X, Y, d) <-> coordonnées 2D et direction de l'arête
+    """
+    lc = []
+    n = jeu.shape[0]
+    for i in range(n):
+        for j in range(n):
+            for k in range(n):
+                ec = encodeCube(jeu, i, j, k)
+                if len(ec) != 0: # cube visible
+                    # print(f'cube {i,j,k} visible : {ec}')
+                    lc.append(((i,j,k),ec))
+    return lc
+
+# encodage des axes non masqués par des cubes
+def encodeAxes(jeu):
+    """
+    encodage des axes 3D x, y ou z si pas de cube pour les cacher
+    """
+    la = []
+    n = jeu.shape[0]
+    for i in range(n):
+        if not jeu[i, 0, 0]:
+            X,Y = projection([i, 0, 0])
+            la.append( (X, Y, "x") )
+        if not jeu[0, i, 0]:
+            X,Y = projection([0, i, 0])
+            la.append( (X, Y, "y") )
+        if not jeu[0, 0, i]:
+            X,Y = projection([0, 0, i])
+            la.append( (X, Y, "z") )
+    return la
+
+def encodeSolution(encJeu):
+    # calcule l'encodage de la solution à partir de l'encodage du jeu
+    # On récupère l'ensemble des arêtes encodées pour tous les cubes de
+    # l'empilement puis on les regroupe dans un ensemble pour éviter les
+    # doublons.
+    # On retourne la liste correspondante
+    s = set()
+    for p in encJeu:
+        for c in p[1]:
+            s.add(c)
+    return list(s)
+
+
+
+# --------------------------
+# 2.3 : Résolution d'un énigme
 # --------------------------
 # codage du jeu :
 # matrice M [i,j,k] représentant canoniquement la présence d'un petit cube
@@ -554,15 +693,25 @@ def doSolve(enigme, n, trace = False):
     solve(lc3D, M, lr, trace = trace)  # première passe
     lrf = []
     for r in lr:
-        rr = pf(r)
-        if len(rr) > 0:
-            lrf.append(pf(r))
+        pfr = pf(r)
+        if len(pfr) > 0:
+            # vérification finale
+            # Il arrive qu'en cas de segments surnuméraires dans l'énigme, une solution
+            # soit trouvée avec un (ou plusieurs ?) segments de l'énigme non présents
+            # dans la solution. Une telle solution est à rejeter
+            if -1 in pfr:
+                lrf.append(pfr)
+            else:
+                spfr = set(encodeSolution(encodage(pfr)))
+                sa = set(encodeAxes(pfr))
+                if len(set(enigme).difference(spfr | sa)) == 0:
+                    lrf.append(pfr)
     return lrf
 
 
 # %% Section 5 : fonctions pour faciliter les tests
 
-def test_solver(enig, dim, trace=False):
+def test_solver(enig, dim, trace = False, file = None):
     """
     - Résoud une énigme et retourne la liste des solutions
     - Imprime le nombre de configurations possibles épuisant toutes les
@@ -586,12 +735,12 @@ def test_solver(enig, dim, trace=False):
 
     # calcul de l'affichage
     cs = 5 if ns < 3 else 4
-    draw_solutions(enig, dim, lsol, cellSize = cs)
+    draw_solutions(enig, dim, lsol, cs, file)
 
     return lsol
 
 # tracé des solutions
-def draw_solutions(enigma, n, lSols, cellSize = 4):
+def draw_solutions(enigma, n, lSols, cellSize = 4, file = None):
     """
     dessine à l'aide de pyplot l'enigme ainsi que les solutions trouvées.
     - enigma représente l'énigme (ie. les segments connus avant résolution)
@@ -618,11 +767,11 @@ def draw_solutions(enigma, n, lSols, cellSize = 4):
         for p in e:
             x0, y0 = p[:2]
             d = p[2]
-            if 'x' in d:
+            if 'x' == d:
                 line([x0, y0], [x0 - 1, y0-1],**opt_enig)
-            if 'y' in d:
+            if 'y' == d:
                 line([x0, y0], [x0 + 1, y0-1],**opt_enig)
-            if 'z' in d:
+            if 'z' == d:
                 line([x0, y0], [x0, y0+2],**opt_enig)
 
     # Le tracé d'une solution dans le subplot courant
@@ -670,4 +819,8 @@ def draw_solutions(enigma, n, lSols, cellSize = 4):
             draw_solution(lSols[ns])
             # on superpose l'énigme pour voir l'énigme en même temps !
             draw_enigma(enigma)
-    plt.show()
+    if file == None:
+        plt.show()
+    else:
+        plt.savefig(file)
+        plt.close()

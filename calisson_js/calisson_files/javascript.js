@@ -2,7 +2,6 @@
 javascript.js pour la page HTML de Calisson
 */
 
-
 ////////////////////////////////////////////////////
 // Réglage de l'interface et initialisations diverses
 ////////////////////////////////////////////////////
@@ -19,21 +18,35 @@ v2x = 0;
 v2y = longueur;
 v3x = Math.sqrt(3) * longueur / 2
 v3y = longueur / 2;
-style = true;
 centrex = Math.sqrt(3) / 2 * longueur * taille + marge
 centrey = marge;
 
-// le bouton de téléchargement de la solution
+// définit le 'style' (???) d'interaction avec le jeu
+// true -> on peut modifier la grille
+// false -> grille non modifiable, on peut téléverser la solution trouvée, etc.
+style = true;
+
+// on cache le bouton de téléchargement de la solution
 document.getElementById('terminedl').style.display = "none";
 
 // Les 3 tableaux de travail, unidimentionnels
 // pour les arêtes, contient des [[xa,ya],[xb,yb]], coord des extrémités des segments
 tabsegment = [] 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// pour les milieux des arêtes, contient des [xm, ym, ], coord des milieux du segment 
-//////////// et pas seulement .... àcomprendre !!!!
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/****************************************************
+ tabmilieu est Le tableau fondamental, contenant la plus grande partie des infos sur la grille
+ ce tableau contient des tableuax de la forme [x, y, traceSegment, typeLosange, affichelosange]
+
+- x, y : coordonnées du milieu de l'arête
+- traceSegment : valeur parmi (true, false, 'bloquee', 'solution')
+    true -> segment présent tracé en noir avec point médian pour modification
+    false -> segment absent tracé en pointillés avec point médian pour modification
+    bloquee -> segment de l'énigme, tracé en noir et non modifiable
+    solution -> tracé en rouge, permet de définir la solution de l'énigme lors de la conception de la grille
+  En mode jeu, seules les trois première valeurs sont utilisées.
+- typeLosange : valeur parmi ('gauche', 'hori', 'droite') en fonction de l'orientation du losange
+- afficheLosange : booléen définissant l'affichage ou non du losange
+*****************************************************/
 tabmilieu = []  
 
 // solution contient true, false ou "bloquee"
@@ -109,11 +122,9 @@ function clearCanvas() {
     context.fillStyle = "white";
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.closePath();
-
-
 }
 
-// mise à jour de l'affichage
+// remet tout dans l'état de départ et dessine la figure
 function rafraichit() {
     clearCanvas();
 
@@ -135,6 +146,7 @@ function rafraichit() {
     dessinerlafigure()  // puis affichage
 }
 
+// recalcule toutes les grandeurs géométriques dans tabsegment et tabmilieu
 function miseajourpointencours() {
     cpt = 0;
     console.log(taille)
@@ -172,7 +184,6 @@ function miseajourpointencours() {
             }
         }
     }
-
     //côté droite sans diagonale verticale
     for (j = 0; j < 2 * taille; j++) {
         for (k = 0; k < Math.min(taille + 1, 2 * taille - j); k++) {
@@ -186,7 +197,6 @@ function miseajourpointencours() {
                 ];
                 tabmilieu[cpt][0] = centrex + i * v1x + j * v2x + (k + 0.5) * v3x;
                 tabmilieu[cpt][1] = centrey + i * v1y + j * v2y + (k + 0.5) * v3y;
-
                 cpt++
             }
             if ((k < taille) && (k > 0)) {
@@ -209,15 +219,12 @@ function miseajourpointencours() {
                 tabmilieu[cpt][0] = centrex + (i + 0.5) * v1x + j * v2x + k * v3x;
                 tabmilieu[cpt][1] = centrey + (i + 0.5) * v1y + j * v2y + k * v3y;
                 cpt++
-
-
             }
-
-
         }
     }
 }
 
+// Remet les trois tableaux de travail dans l'état de départ
 function miseajourpoint(chaine) {
     if (chaine == undefined) {
         tabsegment = [];
@@ -253,9 +260,7 @@ function miseajourpoint(chaine) {
         //côté droit sans diagonale verticale
         for (j = 0; j < 2 * taille; j++) {
             for (k = 0; k < Math.min(taille + 1, 2 * taille - j); k++) {
-
                 i = 0;
-
                 if ((j > 0) && (k < taille)) {
                     tabsegment.push([
                         [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
@@ -270,9 +275,7 @@ function miseajourpoint(chaine) {
                     ])
                     tabmilieu.push([centrex + i * v1x + (j + 0.5) * v2x + k * v3x, centrey + i * v1y + (j + 0.5) * v2y + k * v3y, false, "hori", false])
                 }
-
                 if (k > 0) {
-
                     tabsegment.push([
                         [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
                         [centrex + (i + 1) * v1x + j * v2x + k * v3x, centrey + (i + 1) * v1y + j * v2y + k * v3y]
@@ -282,7 +285,6 @@ function miseajourpoint(chaine) {
             }
         }
     } else {
-
         var p = 0;
         tabsegment = [];
         tabmilieu = [];
@@ -290,9 +292,7 @@ function miseajourpoint(chaine) {
         //côté gauche avec diagonale verticale
         for (j = 0; j < 2 * taille; j++) {
             for (i = 0; i < Math.min(taille + 1, 2 * taille - j); i++) {
-
                 k = 0;
-
                 if ((j > 0) && (i < taille)) {
                     tabsegment.push([
                         [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
@@ -330,7 +330,6 @@ function miseajourpoint(chaine) {
                     }
                     p++;
                 }
-
                 if (i > 0) {
                     tabsegment.push([
                         [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
@@ -348,17 +347,13 @@ function miseajourpoint(chaine) {
                         }
                     }
                     p++;
-
                 }
-
             }
         }
         //côté droite sans diagonale verticale
         for (j = 0; j < 2 * taille; j++) {
             for (k = 0; k < Math.min(taille + 1, 2 * taille - j); k++) {
-
                 i = 0;
-
                 if ((j > 0) && (k < taille)) {
                     tabsegment.push([
                         [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
@@ -395,9 +390,7 @@ function miseajourpoint(chaine) {
                     }
                     p++;
                 }
-
                 if (k > 0) {
-
                     tabsegment.push([
                         [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
                         [centrex + (i + 1) * v1x + j * v2x + k * v3x, centrey + (i + 1) * v1y + j * v2y + k * v3y]
@@ -413,11 +406,8 @@ function miseajourpoint(chaine) {
                             solution.push(false)
                         }
                     }
-
                     p++;
                 }
-
-
             }
         }
     }
@@ -438,21 +428,17 @@ function commencergrille() {
     if (yaunnombre) {
         numerogrille = yaunnombre[0];
         tab = tab.replace(numerogrille, '')
-
     } else {
         numerogrille = '';
     }
 
     if (GET('t') == undefined) {
-
         i = 0
         pastrouve = true
         while ((pastrouve) && (i < 30)) {
             i++;
             taillei = 3 * (3 * i * i - i);
             pastrouve = (taillei != tab.length)
-
-
         }
         taille = i;
     } else {
@@ -471,10 +457,9 @@ function commencergrille() {
         document.getElementById("losange").style.display = '';
         document.getElementById("nblosange").innerHTML = '0';
     } else {
+        solutionpresente = false;
         document.getElementById("chronospan").style.display = 'none';
         document.getElementById("losange").style.display = 'none';
-
-        solutionpresente = false;
     }
 
     v1x = -Math.sqrt(3) * longueur / 2
@@ -487,10 +472,10 @@ function commencergrille() {
     centrey = marge;
 
     miseajourpoint(tab)
-
     dessinerlafigure()
 }
 
+// Associée au bouton 'Reset' : annule les actions de l'utilisateur
 function reset() {
     //chronoarret();
     chronofin = 0;
@@ -502,7 +487,6 @@ function reset() {
             if (tabmilieu[i][4] == true) {
                 tabmilieu[i][4] = false;
             }
-
         }
     }
     dessinerlafigure()
@@ -515,14 +499,9 @@ function reset() {
         document.getElementById("losange").style.display = 'none';
         document.getElementById('messagediv').style.display = "none";
     } else {
-
-
         dessinerlafigure()
     }
-
 }
-
-
 
 function partage() {
     url = "https://mathix.org/calisson/index.html?tab=" + GET('tab');
@@ -533,6 +512,7 @@ function partage() {
     }
 }
 
+// associée au bouton 'Ma grille est terminée'
 function termine() {
 
     style = !style;
@@ -547,9 +527,7 @@ function termine() {
         document.getElementById('btreset').style.display = "";
         document.getElementById('termine').innerHTML = "Ma grille est terminée";
     }
-
     contextbis.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, canvasbis.width, canvasbis.height);
-
 }
 
 function dessinerlafigure() {
@@ -563,13 +541,11 @@ function dessinerlafigure() {
         context.lineTo(tabsegment[i][1][0], tabsegment[i][1][1]);
         context.stroke();
         context.closePath();
-
     }
 
     //affichage des milieu et dessin du segments si doit être tracé.
     for (i = 0; i < tabmilieu.length; i++) {
         {
-
             if ((tabmilieu[i][2] == true) || (tabmilieu[i][2] == 'bloquee') || (tabmilieu[i][2] == 'solution')) { //on trace le segment si vrai
                 context.beginPath();
                 context.lineWidth = 5;
@@ -595,7 +571,6 @@ function dessinerlafigure() {
                 context.stroke();
                 context.closePath();
             }
-
             if ((tabmilieu[i][4]) && (style)) {
                 var x = tabmilieu[i][0];
                 var y = tabmilieu[i][1];
@@ -653,12 +628,6 @@ function dessinerlafigure() {
                 context.fill();
                 context.closePath();
             }
-
-
-
-
-
-
         }
     }
     //bordure
@@ -685,8 +654,6 @@ function dessinerlafigure() {
         context.stroke();
         context.closePath();
     }
-
-
 }
 
 function getMousePos(canvas, evt) {
@@ -696,7 +663,6 @@ function getMousePos(canvas, evt) {
         y: evt.clientY - rect.top
     };
 }
-
 
 canvas.addEventListener('pointerdown', function(evt) {
     ajouterenleversegment(evt)
@@ -736,7 +702,7 @@ function ajouteunlosange(x, y) {
 
 // MT+ pour passer du mode jeu au mode retouche de grille
 function gotoDesign() {
-    var goDesign = true;
+    // MAJ de tabmilieu en fonction de solution
     for(var i = 0; i < solution.length; i++) {
         switch (solution[i]) {
             case true : tabmilieu[i][2]='solution'; break;
@@ -744,6 +710,7 @@ function gotoDesign() {
             case 'bloquee' : tabmilieu[i][2] = true;
         } 
     }
+    // réglage de l'interface : seul le bouton de génération du lien est actif
     document.getElementById('btreset').style.display = "none";
     document.getElementById('genurl').style.display = "";
     document.getElementById('terminedl').style.display = "none";
@@ -756,10 +723,11 @@ function gotoDesign() {
 }
 // MT-
 
+// La fonction appelée à chaque clic de souris sur le point mileu d'un segment
 function ajouterenleversegment(evt) {
-    console.log(evt.button);
-    // +MT
-    if (evt.getModifierState('Alt') && evt.getModifierState('Control')) {
+    // console.log(evt.button);
+    // +MT : si on appuie sur Alt (option sur mac) => passage en mode retouche de la grille
+    if (evt.getModifierState('Alt')) {
         gotoDesign();
         return
     }
@@ -793,7 +761,6 @@ function ajouterenleversegment(evt) {
                     }
                 }
             }
-
         } else {
             if ((evt.button == 0) && (mode == "arete")) { //si pas clic droit
 
@@ -821,7 +788,6 @@ function ajouterenleversegment(evt) {
         }
     }
     if (modejeu && solutionpresente) {
-
         if (testesolution()) {
             chronoarret()
             termine();
@@ -830,7 +796,6 @@ function ajouterenleversegment(evt) {
             chaine = chaine + '<br/>Bravo! Vous avez fait un temps de ' + chronofin + ' s et utilisé ' + nblosangeutilise + ' losange(s).';
             document.getElementById('message').innerHTML = chaine;
             document.getElementById('messagediv').style.display = "";
-
         }
     }
 }
@@ -851,7 +816,6 @@ function curseur(evt) {
             if (Math.abs(x - tabmilieu[i][0]) < longueur / 5) {
                 if (Math.abs(y - tabmilieu[i][1]) < longueur / 5) {
                     document.getElementById('canvas').style.cursor = 'pointer';
-
                     dessinerlafigure();
                     if (tabmilieu[i][2] != 'bloquee') {
                         context.beginPath();
@@ -864,10 +828,9 @@ function curseur(evt) {
                 }
             }
         }
-
     }
 }
-
+// associée au bouton de génération de l'url de la grille (mode design)
 function genereurl() {
     chaine = "?tab=";
 
@@ -885,13 +848,11 @@ function genereurl() {
     numerogrille = prompt('Indiquer le numéro de la grille (laisser vide si non défini');
     while (((isNaN(numerogrille))) && (numerogrille != '')) {
         numerogrille = prompt('Indiquer le numéro de la grille (laisser vide si non défini');
-       
     }
      chaine = chaine + numerogrille
     copierdanspressepapier("https://mathix.org/calisson/index.html" + chaine)
     //	alert("Voici la chaîne à copier : https://mathix.org/calisson/index.html" + chaine)
 }
-
 
 function GET(param) {
     var vars = {};
@@ -918,16 +879,13 @@ function chronomarche() {
 
 function chronoarret() {
     chronofin = chrono;
-
     clearInterval(chronointerval);
-
 }
 
 function testesolution() {
     var bool = true;
     var i = 0;
     console.log(solution);
-
     console.log(solution[i] + "==" + tabmilieu[i][2])
     while ((i < tabmilieu.length) && (bool)) {
         bool = (solution[i] == tabmilieu[i][2])
@@ -939,18 +897,23 @@ function testesolution() {
 /////////////////////////////////////////////
 // point d'entrée effectif
 /////////////////////////////////////////////
-
-if (GET('tab') == undefined) {
-    rafraichit()
-    modejeu = false;
-    solutionpresente = false;
-    document.getElementById("chronospan").style.display = 'none';
-    document.getElementById("losange").style.display = 'none';
-    document.getElementById('messagediv').style.display = "none";
-} else {
-    commencergrille()
+function start() {
+    if (GET('tab') == undefined) {
+        rafraichit()
+        modejeu = false;
+        solutionpresente = false;
+        document.getElementById("chronospan").style.display = 'none';
+        document.getElementById("losange").style.display = 'none';
+        document.getElementById('messagediv').style.display = "none";
+    } else {
+        commencergrille()
+    }    
 }
 
+// On démarre !
+start();
+
+// on change la taille écran du graphique
 function rafraichitlongueur() {
     longueur = Number(document.getElementById("longueur").value);
     if (GET('t') != undefined) {
@@ -975,6 +938,7 @@ function rafraichitlongueur() {
     dessinerlafigure()
 }
 
+// Associée au bouton de changement de mode pour interface tactile (arête/losange)
 function changemode() {
     console.log(mode)
     if (mode == "arete") {
@@ -986,31 +950,32 @@ function changemode() {
     }
 }
 
+// empêche l'affichage du menu contextuel en cas de clic-droit sur la figure
 canvas.oncontextmenu = function(event) {
     event.preventDefault();
-
 }
 
+// associée au bouton de téléchargement de l'image de la grille
 function dl() {
     var canvas = document.getElementById("canvas");
-
     canvas.toBlob(function(blob) {
         saveAs(blob, "solution.png");
     });
-
 }
 
-
 function copierdanspressepapier(url) {
-
+    // On tente d'écrire l'url directement dans le PP. Si le navigateur n'y arrive pas, on présente une fenêtre d'information
+    // permettant de copier l'url "à la main"
     navigator.clipboard.writeText(url).then(function() {
         alert("Url dans le presse-papier!\n (controle-V pour coller l'url à l'endroit voulu) ");
     }, function() {
         prompt('Voici l\'url : ', url);
-        navigator.clipboard.writeText(url);
     });
 }
 
+// Fonction non utilisée. Certainement un vestige d'une tentative d'utilisation du PP
+// mise en commentaires
+/*
 function copierdanspressepapier_back(url) {
 
     var content = document.getElementById('copiepressepapier');
@@ -1018,6 +983,6 @@ function copierdanspressepapier_back(url) {
     console.log(content)
     content.select();
     document.execCommand('copy');
-
     alert("Url dans le presse-papier!\n (controle-V pour coller l'url à l'endroit voulu) ");
 }
+*/

@@ -33,6 +33,11 @@ import numpy as np
 # ------------------------------------------------------------
 # sortie graphique sans interaction : on utilise pyplot pour faire simple
 
+# Les couleurs pour les tracés
+color_enigme = "black"
+color_solution = "red"
+color_indet = "gray"
+
 # Deux utilitaires
 def line(A, B, **kwargs):
     """ trace une ligne dans le plan de figure entre les points A et B.
@@ -89,7 +94,7 @@ def projCube(jeu, i, j, k):
 
     if jeu[i, j, k] == 1: # cube certain
         # options de tracé des cubes certains
-        opt = {'color': 'blue', 'linewidth': 3}
+        opt = {'color': color_solution, 'linewidth': 3}
 
         # SA est le sommet d'origine du cube, jamais visible.
         # S1 .. S7 désigne les 7 sommets potentiellement visibles
@@ -138,7 +143,7 @@ def projCube(jeu, i, j, k):
         # plt.pause(0.005)
     elif jeu[i, j, k] == -1:
         # options de tracé des cubes indéterminés
-        opt_indet = {'color': 'gray', 'linewidth': 4}
+        opt_indet = {'color': color_indet, 'linewidth': 4}
         SA = np.array([i, j, k])
         S1 = np.array([0, 0, 1])+SA
         S2 = np.array([1, 0, 1])+SA
@@ -163,7 +168,7 @@ def drawHex(n):
     de rangement """
 
     # les lignes intérieures
-    opt = {'color': 'black', 'linestyle': 'dashed', 'linewidth': 1}
+    opt = {'color': color_enigme, 'linestyle': 'dashed', 'linewidth': 1}
     for i in range(n+1):
         lineproj([0, 0, i], [n, 0, i], **opt)
         lineproj([0, 0, i], [0, n, i], **opt)
@@ -173,7 +178,7 @@ def drawHex(n):
         lineproj([0, i, 0], [0, i, n], **opt)
 
     # le bord
-    opt = {'color': 'red', 'linewidth': 4}
+    opt = {'color': color_enigme, 'linewidth': 3}
 
     lineproj([0, 0, n], [n, 0, n], **opt)
     lineproj([n, 0, n], [n, 0, 0], **opt)
@@ -188,7 +193,7 @@ def drawAxes(jeu):
     Dessin des projections des axes 3D x, y ou z si pas de cube pour les cacher
     """
     n = jeu.shape[0]
-    opt = {'color': 'blue', 'linewidth': 3}  # options de tracé des cubes
+    opt = {'color': color_solution, 'linewidth': 3}  # options de tracé des cubes
     for i in range(n):
         if not jeu[0, 0, i]:
             lineproj([0, 0, i], [0, 0, i+1], **opt)
@@ -426,11 +431,12 @@ def encodeSolution(encJeu):
 # - si on peut ajouter le sommet, modification de la matrice en prenant en compte les contraintes
 #  afin de fixer la valeur des cubes dépendant des arêtes centrées sur le sommet
 def placeSommet(xs, ys, zs, d, M):
-    """Arguments :
+    """
+    Arguments :
     xs, ys, zs -> coordonnées 3D d'un sommet s de l'énigme
     d -> la chaîne indiquant la direction de l'arête à partir de s ("x" ou "y" ou "z")
-         (la chaîne peut contenir plusieurs arêtes : "xz" par exemple)
     M -> matrice représentant l'état courant du jeu
+
     Valeur de retour :
     couple (r , M')
     r -> booléen indiquant si l'ajout du sommet est possible
@@ -764,7 +770,7 @@ def draw_solutions(enigma, n, lSols, cellSize = 4, file = None):
 
     # la fonction de tracé de l'énigme dans le subplot courant
     def draw_enigma(e):
-        opt_enig = {'color': 'red', 'linewidth': 4}
+        opt_enig = {'color': color_enigme, 'linewidth': 4}
         for p in e:
             x0, y0 = p[:2]
             d = p[2]

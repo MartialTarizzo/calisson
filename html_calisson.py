@@ -182,7 +182,7 @@ def make_enigma_from_url(orgurl):
     """
 
     # calcul de la taille de jeu
-    tab_withnum = orgurl.split("=")[1] # on récupère ce qui suit le "="
+    tab_withnum = orgurl.split("=")[-1] # on récupère ce qui suit le "="
     tab = re.findall('[tsf]+', tab_withnum)[0] # on vire le nombre à la fin
 
     # le nombre d'arêtes est de la forme 3n(3n-1). Plutôt que de résoudre cette équa du 2nd degré

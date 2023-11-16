@@ -10,7 +10,6 @@
 from calisson import test_solver
 from html_calisson import make_enigma_from_url, make_url
 import webbrowser
-import os
 
 # à définir en fonction de l'environnement de travail
 # navigateur  utiliser
@@ -56,4 +55,17 @@ checkGrid(orgurl)
 
 orgurl = "file:///Users/martial/Desktop/calisson 2/calisson_js/calisson.html?tab=fffffffstfffsstffsfffsfsfsfssfsfsffsffsssfsffsffsftfffsftfsffsfsfftfsffsssfsfffftfsssffsftfsffsfftffsftfsssftfffsfftffffssftsssfsffffssftffsfftfsfffssfsftffsfffffffftsfffssffsfffsffsfffffsfstffffsffsffffffsfttffffstfsfssfftssfsfffsffssftsfsfstssfsfffsfftffffssftfffffsffffffsstsftffffsfsfsfsfftssssfsffsfsf448"
 
+checkGrid(orgurl)
+##
+orgurl = """
+https://mathix.org/calisson/index.html?tab=fssffffssftfssfffffssftsftffsfftssfsfsfssfffftfsfstffffssftsfffsfftsfsft
+"""
+
+
+checkGrid(orgurl)
+
+##
+orgurl= """
+https://mathix.org/calisson/index.html?tab=fssfffffffftfsfffffffffffffsfttffsfffssfffsstsfffsfsftsffsfttffsssftffsssfffsfsfsffstfsffstsfsfsffsfsfstffffffssfffffffftfsfssfffffffsftftfssfffstfsfffsstfsfftffsfsfsftfftsfssfsfffsfffsffssfsttfffsfftfssfffffff
+"""
 checkGrid(orgurl)

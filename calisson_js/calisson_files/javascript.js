@@ -1,7 +1,18 @@
+/* 
+javascript.js pour la page HTML de Calisson
+*/
+
+
+////////////////////////////////////////////////////
+// Réglage de l'interface et initialisations diverses
+////////////////////////////////////////////////////
+
 taille = Number(document.getElementById("taille").value);
 longueur = Number(document.getElementById("longueur").value);
 marge = 5;
 mode = "arete";
+
+// valeurs utilisées pour le calcul des coordonnées des points/segments
 v1x = -Math.sqrt(3) * longueur / 2
 v1y = longueur / 2;
 v2x = 0;
@@ -11,16 +22,41 @@ v3y = longueur / 2;
 style = true;
 centrex = Math.sqrt(3) / 2 * longueur * taille + marge
 centrey = marge;
+
+// le bouton de téléchargement de la solution
 document.getElementById('terminedl').style.display = "none";
-tabsegment = []
-tabmilieu = []
-solution = [];
+
+// Les 3 tableaux de travail, unidimentionnels
+// pour les arêtes, contient des [[xa,ya],[xb,yb]], coord des extrémités des segments
+tabsegment = [] 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// pour les milieux des arêtes, contient des [xm, ym, ], coord des milieux du segment 
+//////////// et pas seulement .... àcomprendre !!!!
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+tabmilieu = []  
+
+// solution contient true, false ou "bloquee"
+// "bloquee" -> arête fixée non modifiable. Fait partie de la solution 
+//      <=> arête de l'énigme toujours affichée dans la page web
+//  true -> arête de la solution, non affichée pendant le jeu (ça serait trop facile !)
+// false -> arête ne faisant pas partie de la solution
+solution = []; 
+
+// modejeu est un drapeau permettant de savoir si on est mode jeu ou design
 modejeu = false;
+// la chaine contenue dans l'url contient-elle la solution ?
 solutionpresente = false;
+
+// différents compteurs
 nblosangeutilise = 0;
 chrono = 0;
 chronofin = 0;
+
+// le numéro de la grille si présent à la fin de l'url
 numerogrille = '';
+
+// réglage de l'interface sur un écran tactile 
 var is_touch_device = function() {
     try {
         document.createEvent("TouchEvent");
@@ -38,17 +74,21 @@ if (!(is_touch_device())) {
     document.getElementById('explicationcontrole').style.display = 'none';
     document.getElementById('explicationcontroleportable').style.display = '';
 }
+
+// variables permettant les dessins dans la page du navigateur
+// canvas principal 
 canvas = document.getElementById('canvas');
 if (!canvas) {
     alert("Impossible de récupérer le canvas");
 }
-
+// et son contexte
 context = canvas.getContext('2d');
 if (!context) {
     alert("Impossible de récupérer le context du canvas");
 
 }
 
+// copie du canvas pour la miniature affichée à la fin du jeu au dessus du message de succès
 canvasbis = document.getElementById('canvasbis');
 if (!canvasbis) {
     alert("Impossible de récupérer le canvasbis");
@@ -59,7 +99,7 @@ if (!contextbis) {
     alert("Impossible de récupérer le context du canvas");
 
 }
-
+// effacement de la zone de jeu
 function clearCanvas() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     var w = canvas.width;
@@ -73,8 +113,7 @@ function clearCanvas() {
 
 }
 
-
-
+// mise à jour de l'affichage
 function rafraichit() {
     clearCanvas();
 
@@ -82,8 +121,6 @@ function rafraichit() {
     longueur = Number(document.getElementById("longueur").value);
     canvas.width = Math.sqrt(3) * taille * longueur + 2 * marge;
     canvas.height = taille * longueur * 2 + 2 * marge;
-
-
 
     v1x = -Math.sqrt(3) * longueur / 2
     v1y = longueur / 2;
@@ -93,15 +130,15 @@ function rafraichit() {
     v3y = longueur / 2;
     centrex = Math.sqrt(3) / 2 * longueur * taille + marge
     centrey = marge;
-    miseajourpoint();
 
-
-    dessinerlafigure()
+    miseajourpoint();   // remplit les tableaux de travail
+    dessinerlafigure()  // puis affichage
 }
 
 function miseajourpointencours() {
     cpt = 0;
     console.log(taille)
+    //côté gauche avec diagonale verticale
     for (j = 0; j < 2 * taille; j++) {
 
         for (i = 0; i < Math.min(taille + 1, 2 * taille - j); i++) {
@@ -114,7 +151,6 @@ function miseajourpointencours() {
                 tabmilieu[cpt][0] = centrex + (i + 0.5) * v1x + j * v2x + k * v3x;
                 tabmilieu[cpt][1] = centrey + (i + 0.5) * v1y + j * v2y + k * v3y;
                 cpt++
-
             }
             if (i < taille) {
                 tabsegment[cpt] = [
@@ -125,7 +161,6 @@ function miseajourpointencours() {
                 tabmilieu[cpt][1] = centrey + i * v1y + (j + 0.5) * v2y + k * v3y;
                 cpt++
             }
-
             if (i > 0) {
                 tabsegment[cpt] = [
                     [centrex + i * v1x + j * v2x + k * v3x, centrey + i * v1y + j * v2y + k * v3y],
@@ -134,14 +169,11 @@ function miseajourpointencours() {
                 tabmilieu[cpt][0] = centrex + i * v1x + j * v2x + (k + 0.5) * v3x;
                 tabmilieu[cpt][1] = centrey + i * v1y + j * v2y + (k + 0.5) * v3y;
                 cpt++
-
             }
-
         }
     }
 
     //côté droite sans diagonale verticale
-
     for (j = 0; j < 2 * taille; j++) {
         for (k = 0; k < Math.min(taille + 1, 2 * taille - j); k++) {
 
@@ -515,7 +547,7 @@ function termine() {
         document.getElementById('btreset').style.display = "";
         document.getElementById('termine').innerHTML = "Ma grille est terminée";
     }
-    //cpie du canvas pour la miniature
+
     contextbis.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, canvasbis.width, canvasbis.height);
 
 }
@@ -702,8 +734,37 @@ function ajouteunlosange(x, y) {
 
 }
 
+// MT+ pour passer du mode jeu au mode retouche de grille
+function gotoDesign() {
+    var goDesign = true;
+    for(var i = 0; i < solution.length; i++) {
+        switch (solution[i]) {
+            case true : tabmilieu[i][2]='solution'; break;
+            case false : tabmilieu[i][2] = false; break;
+            case 'bloquee' : tabmilieu[i][2] = true;
+        } 
+    }
+    document.getElementById('btreset').style.display = "none";
+    document.getElementById('genurl').style.display = "";
+    document.getElementById('terminedl').style.display = "none";
+    document.getElementById('sptaille').style.display = "none";
+    document.getElementById("chronospan").style.display = 'none';
+    document.getElementById("losange").style.display = 'none';
+    document.getElementById('termine').style.display = 'none';
+
+    dessinerlafigure();
+}
+// MT-
+
 function ajouterenleversegment(evt) {
     console.log(evt.button);
+    // +MT
+    if (evt.getModifierState('Alt') && evt.getModifierState('Control')) {
+        gotoDesign();
+        return
+    }
+    //-MT
+
     if (style) {
         var pos = getMousePos(canvas, evt)
         var x = pos.x
@@ -871,11 +932,13 @@ function testesolution() {
     while ((i < tabmilieu.length) && (bool)) {
         bool = (solution[i] == tabmilieu[i][2])
         i++;
-
-
     }
     return ((i == solution.length) && (bool))
 }
+
+/////////////////////////////////////////////
+// point d'entrée effectif
+/////////////////////////////////////////////
 
 if (GET('tab') == undefined) {
     rafraichit()
@@ -943,7 +1006,8 @@ function copierdanspressepapier(url) {
     navigator.clipboard.writeText(url).then(function() {
         alert("Url dans le presse-papier!\n (controle-V pour coller l'url à l'endroit voulu) ");
     }, function() {
-        alert('Voici l\'url : ' + url);
+        prompt('Voici l\'url : ', url);
+        navigator.clipboard.writeText(url);
     });
 }
 

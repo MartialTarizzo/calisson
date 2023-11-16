@@ -29,7 +29,7 @@
 <body>
 
     <div id="controle">
-        <span id="sptaille" style="display: none;">Taille :
+        <span id="sptaille" >Taille :
             <input type="number" id="taille" value="3" min="2" step="1" onchange="rafraichit()" width="30px"></span>
 
         <span id="splongueur">Zoom <input type="number" id="longueur" value="80" min="30" step="1" onchange="rafraichitlongueur()" width="30px"></span>
@@ -42,7 +42,7 @@
 
     <br><button id="btreset" onclick="reset()">Reset</button>
     <button id="btmode" onclick="changemode()" style="display: none;">Mode arête</button>
-    <button id="genurl" onclick="genereurl()" style="display: none;">Génère lien</button>
+    <button id="genurl" onclick="genereurl()" >Génère lien</button>
     <button id="termine" onclick="termine()">Ma grille est terminée</button>
     <button id="terminedl" onclick="dl()" style="display: none;">Télécharger ma solution</button>
 

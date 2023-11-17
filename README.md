@@ -21,6 +21,7 @@ Seuls les fichiers python (*.py) sont intéressants à télécharger, afin de po
 - calisson.py : contient les fonctions de représentation graphique ainsi que celles permettant la résolution d'une énigme
 - gen_calisson.py : contient les fonctions permettant la génération automatique (et aléatoire) d'un empilement ainsi que d'une énigme
 - html_calisson : contient les fonctions d'interfaçage avec mathix.org (récupération d'une énigme présente sur le site et résolution, lancement du site sur une énigme générée localement pour une résolution manuelle)
+- verif_calisson : pour créer une grille ou modifier une grille existante, et vérifier la conformité de la grille.
 - tests_calisson.py : comme son nom l'indique, fichiers de test divers et variés de résolutions d'énigmes.
 
 Le répertoire calisson_js ne contient qu'une copie de la page HTML de mathix permettant la résolution d'une énigme. Cela peut être utilisé depuis python pour tenter une résolution dans l'interface HTML sans avoir de connexion internet active. 

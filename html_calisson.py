@@ -166,7 +166,7 @@ def make_url(enigme, dim):
 def make_enigma_from_url(orgurl):
     """
     orgurl : adresse web contenant une énigme proposée sur le site mathix.org
-    Retourne une paire (dim, énigme) où dim est la taille du jeu et énigme en encodage Python
+    Retourne une paire (énigme, dim) où dim est la taille du jeu et énigme en encodage Python
 
     En détails :
     orgurl est de la forme suivante :
@@ -201,7 +201,7 @@ def make_enigma_from_url(orgurl):
         if c == "t":
             enigme.append(tabseg[i])
 
-    return dim, enigme
+    return enigme, dim
 
 """
 ## pour tester, évaluer la ligne suivante :
@@ -242,7 +242,7 @@ orgurl = "https://mathix.org/calisson/index.html?tab=ffffftsfffffffsssfsffsfffff
 
 webbrowser.open(orgurl)
 
-dim, enigme = make_enigma_from_url(orgurl)
+enigme, dim = make_enigma_from_url(orgurl)
 test_solver(enigme, dim)
 
 # ----------------------
@@ -304,7 +304,7 @@ orgurl = "https://mathix.org/calisson/index.html?tab=fffffffstfffsstffsfffsfsfsf
 
 webbrowser.open(orgurl)
 
-dim, enigme = make_enigma_from_url(orgurl)
+enigme, dim = make_enigma_from_url(orgurl)
 
 test_solver(enigme, dim)
 
@@ -315,7 +315,7 @@ orgurl = "https://mathix.org/calisson/index.html?tab=fffffffstfffffstssfffsffsff
 
 webbrowser.open(orgurl)
 
-dim, enigme = make_enigma_from_url(orgurl)
+enigme, dim = make_enigma_from_url(orgurl)
 
 enigme = [(-4, 8, 'y'),
  (-1, 7, 'z'),
@@ -352,6 +352,5 @@ enigme = [(-4, 8, 'y'),
 test_solver(enigme, dim)
 
 # ----------------------
-
 
 """

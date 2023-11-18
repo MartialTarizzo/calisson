@@ -16,19 +16,45 @@ Il s'appuie sur le lancement d'une page HTML locale dans un navigateur,
 cette page exécutant du code javascript local permettant la modif de la grille
 si besoin.
 
-Le point d'entrée primcipale est la fonction checkGrid.
+Le point d'entrée principal est la fonction checkGrid.
 
 Deux utilisations possibles :
 
-1) lancement de checkGrid avec une url vide ( "" )
-    C'est le fonctionnement classique pour le concepteur de grille.
-    Une grille vide s'affiche dans le navigateur, et la conception
-    s'effectue 'à la main' :
-    - clic gauche sur une arête -> arête de l'énigme (en noir)
-    - clic milieu sur une arête -> arête de la solution (en rouge)
-    - clic droit -> dessin d'un losange
+1) Conception d'une grille à partir de rien
+    a) on lance d'abord checkGrid avec une url vide ( "" ) :
+     C'est le fonctionnement classique pour le concepteur de grille.
+     Une grille vide s'affiche dans le navigateur, et la conception
+     s'effectue 'à la main' :
+     - clic gauche sur une arête -> arête de l'énigme (en noir)
+     - clic milieu sur une arête -> arête de la solution (en rouge)
+     - clic droit -> dessin d'un losange
+     rem : on peut se contenter des clic-gauche pour dessiner l'énigme
+          et s'en remettre à Python pour la résoudre ... voir ci-dessous
 
-    Le bouton de sauvegarde de l'url permet de récupérer l'url dans le PP
+     Le bouton de sauvegarde de l'url permet alors de récupérer l'url dans le PP
+
+    b) on relance checkgrid en collant l'url depuis le PP.
+     Le programme va alors tenter de résoudre l'énigme, afficher la fenêtre
+     de résolution et lancer la page HTML.
+
+     Si l'énigme a une seule solution, c'est parfait. on passe au point (c)
+     Sinon, on retouche l'énigme dans la page HTML (on passe en mode
+     "modification de grille" en faisant Alt-clic_gauche sur la grille).
+     Quand les modifs sont faites, on génére l'url de la grille retouchée,
+     on la copie dans le PP.
+     Pour pouvoir relancer le code python, on ferme la fenêtre d'affichage
+     des solutions, et on retourne en (b)
+     (On peut fermer ou non la fenête du navigateur. Si on ne la ferme pas,
+     le prochain affichage se fera dans un nouvel onglet. Cela permet au besoin
+     de comparer avec une version précédente, voire de revenir en arrière en
+     récupérant l'url dans l'onglet correspondant)
+
+    c) Quand l'énigme a une seule solution, il suffit d'appeler la fonction
+     make_url_sol avec la dernière url copiée dans le PP.
+     Le navigateur s'ouvre sur la page HTML et la fenêtre de calcul de la
+     solution est affichée. Le passage en mode retouche de la grille permet
+     une ultime vérification avant de copier l'url définitive, dont on fait
+     ce qu'on veut !
 
 2) lancement de checkGrid avec une url non vide
     (Exemple d'url :
@@ -45,13 +71,12 @@ Deux utilisations possibles :
     La page HTML passe alors en mode "conception de grille", permettant
     les mêmes opérations que dans le mode d'utilisation (1)
 
-    La copie de l'url de la grille modifiée permet alors  de recommencer
-    la vérification en relançant checkGrid avec cette nouvelle url.
+    Ceci permet de corriger à moindre fraisune énigme défectueuse.
 
-    Attention : la fenêtre graphique d'affichage de la grille est souvent bloquante
-    pour le programme python (ça dépend du backend de python, donc de
-    l'environnement de développement utilisé).
-    Il faut donc la fermer avant de relancer la vérification.
+Attention : la fenêtre graphique d'affichage de la grille résolue est souvent
+bloquante pour le programme python (ça dépend du backend de python, donc de
+l'environnement de développement utilisé).
+Il faut donc la fermer avant de relancer la vérification.
 
 
 """
@@ -101,21 +126,60 @@ def checkGrid(orgurl):
         openLocalBrowser(orgurl)
     else:
         openLocalBrowser(orgurl)
-        dim, enigme = make_enigma_from_url(orgurl)
+        enigme, dim = make_enigma_from_url(orgurl)
         test_solver(enigme, dim)
 
+def make_url_sol(url):
+    """
+    Arg : une url pour une grille ayant une solution unique et correcte, mais
+          ne contenant pas nécessairement les arêtes correctes de la solution)
 
-""" Tests
-- évaluer d'abord la ligne suivante :
+    Retourne l'url complète (avec la solution correcte) pour utilisation
+    définitive
+    """
+    return make_url(*make_enigma_from_url(url))
 
-from verif_calisson import checkGrid
+""" Tests : quelques résultats obtenus avec le mode d'emploi décrit ci-dessus
+
+- évaluer ce fichier ou la ligne suivante :
+
+from verif_calisson import checkGrid, make_url_sol
 
 - puis évaluer un à un les blocs de codes entre '----------------'
 
 # -----------------------------------
 # %% conception à partir de rien ...
 
-checkGrid("")
+# %% segments placés à la main, un peu partout au pif
+
+url = "https://mathix.org/calisson/index.html?tab=fffffffttfffffffffftftfffffffffftfffffffffffftfffffffffffftffffffffffftf"
+
+checkGrid(url)
+
+checkGrid(make_url_sol(url))
+
+# -----------------------------------
+# %% grille Bonjour
+
+checkGrid(make_url_sol("https://mathix.org/calisson/index.html?tab=fffffffffffffffttfftfffffffffftftfftfffffttffffftffffffffffffffftffffffffffffftfffffttftffffffftffffffftffffffffffffffffffffffttfftffffttffffffffffffftfffffffffffffffffffffftfffffftfftfffffftffftfffffffffftffff"))
+
+# -----------------------------------
+
+# %%grille calisson 1
+
+checkGrid(make_url_sol("https://mathix.org/calisson/index.html?tab=fffffffffffffftffffffffffffffftfffftffffttffffffffftfffffffffffffffffftfftftffftfffffftffffftffftffffffffffffffffffffffftffffffffffffffffftffffftfffffftfffffffffftffffffffffftffffffffttfffffttftffffffftffffffff"))
+
+# -----------------------------------
+
+# %% calisson 2
+checkGrid("https://mathix.org/calisson/index.html?tab=fffssffffftsfsfsfstffftsfsftstsfffsfsftsfssfsfsssfffsfftffsffsfffffsfffffsftfsftsfsfftsfffsftfstfsffffffffffffffssfffffsftfsfsfssffffstssfsfftfffffffsffsffsfffffffsffsfsfsfttffsftsttftfsfssftfsftfffsfffffffffff")
+
+
+# -----------------------------------
+
+# %% calisson 3
+
+checkGrid(make_url_sol("httpf://mathix.org/califfon/index.html?tab=ffffffffffttftfffftffftfftfffffffffffftfffffffffffffffftffffffffffffffffffftffftffffftfffffftfftffffffffffffffffffffffffftfffffffffffftfffffftffffffffffffffffffffffffffffffttfffftfttftfffffftffftfffffffffffffff"))
 
 # -----------------------------------
 # la grille exemple donnée dans le commentaire du code (deux solutions)
@@ -144,6 +208,17 @@ checkGrid(orgurl)
 orgurl = "https://mathix.org/calisson/index.html?tab=fffffstfffffffsssfsfsfssfffstfftsfssstsfffsftfssssfsffsffffsfffsffsfffttfsfssfffftfffsstfftfsfssffffsfffsfsssstfffsffffffffstfssffffsfsffssssfsfffffstfsftffsffffffffssfffftsssfffsfsfsfstffsfstfffffffsfsffssffsffftfffftfsstfssffffsffftffsffsftftssffftfffffsfsfsfsftffsffffssstftffsffsffsfsffstfsfffsfftfffsf216"
 
 checkGrid(orgurl)
+
+# ----------------------
+# pour tester une énigme générée automatiquement
+
+from gen_calisson import randomEnigma
+
+dim = 6
+enigme, konf, sol = randomEnigma(dim, trace = True)
+
+checkGrid(make_url(enigme, dim))
+
 # -----------------------------------
 
 """

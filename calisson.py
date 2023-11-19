@@ -678,17 +678,14 @@ def doSolve(enigme, n, trace = False):
     """
 
     # la fonction de recherche du point fixe. Un résultat en argument.
-    # retourne le point fixe de ce résultat
+    # retourne le point fixe de ce résultat ou [] si résultat impossible
     def pf(r):
-        if -1 not in r: # pas d'indétermination
-            return r
-        # il y a des cubes non déterminés. On refait un tour ...
-        if trace : print('Recherche de point fixe ...')
         lrc = []
         solve(lc3D, r, lrc, trace = trace)
         if len(lrc) > 0:
             if np.array_equal(lrc[0], r): # pas d'évolution -> point fixe atteint
                 return r
+            if trace : print('Recherche de point fixe ...')
             return pf(lrc[0])  # on recommence !
         else:
             return []
@@ -697,23 +694,23 @@ def doSolve(enigme, n, trace = False):
     lc3D = trans2D_3D(enigme, n)
     lr = []
     solve(lc3D, M, lr, trace = trace)  # première passe
+
+    # recherche du point fixe pour chaque solution trouvée, et fabrication
+    # de la liste définitve des résultats.
+    # chaque résultat peut être correct, ou incorrect pour de multiples raisons :
+    # - cubes indéterminés
+    # - arêtes de l'énigme ne faisant pas partie de la solution (car examinées
+    #   trop tôt au cours de la résolution en étant compatibles avec la config,
+    #   elles sont rendues incorrectes en tenant compte des arêtes suivantes
+    # Il faut donc chercher le point fixe pour tous les résultats retournés
+    # par le premier appel à solve
     lrf = []
     for r in lr:
         pfr = pf(r)
         if len(pfr) > 0:
-            # vérification finale
-            # Il arrive qu'en cas de segments surnuméraires dans l'énigme, une solution
-            # soit trouvée avec un (ou plusieurs ?) segments de l'énigme non présents
-            # dans la solution. Une telle solution est à rejeter
-            if -1 in pfr:
-                lrf.append(pfr)
-            else:
-                spfr = set(encodeSolution(encodage(pfr)))
-                sa = set(encodeAxes(pfr))
-                if len(set(enigme).difference(spfr | sa)) == 0:
-                    lrf.append(pfr)
-    return lrf
+            lrf.append(pfr)
 
+    return lrf
 
 # %% Section 5 : fonctions pour faciliter les tests
 

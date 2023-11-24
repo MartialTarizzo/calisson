@@ -71,7 +71,7 @@ Deux utilisations possibles :
     La page HTML passe alors en mode "conception de grille", permettant
     les mêmes opérations que dans le mode d'utilisation (1)
 
-    Ceci permet de corriger à moindre fraisune énigme défectueuse.
+    Ceci permet de corriger à moindre frais une énigme défectueuse.
 
 Attention : la fenêtre graphique d'affichage de la grille résolue est souvent
 bloquante pour le programme python (ça dépend du backend de python, donc de
@@ -139,16 +139,52 @@ def make_url_sol(url):
     """
     return make_url(*make_enigma_from_url(url))
 
+
+# %% #######################################
 """ Tests : quelques résultats obtenus avec le mode d'emploi décrit ci-dessus
 
-- évaluer ce fichier ou la ligne suivante :
+- évaluer ce fichier ou incorporer la ligne suivante dans un fichier vide :
 
 from verif_calisson import checkGrid, make_url_sol
 
-- puis évaluer un à un les blocs de codes entre '----------------'
+- puis évaluer (ou coller dans le fichier vide) un à un les blocs de codes entre '----------------'
 
 # -----------------------------------
 # %% conception à partir de rien ...
+
+url = ""
+checkGrid(url)
+
+
+# %% Essais de conception à la main sur plusieurs prénoms
+## Edith
+
+url = "https://mathix.org/calisson/index.html?tab=ffffffffffffffffffttfftfffffffffftfffftfftfffffffffffffttftffffffffffftffffffffftfffftfffffffffftffffffffftffffffffffffffffffftffffffffffftffffffffffffttfffffffffftftfffffffffffffffffffffffffffffffftftfffffffff"
+checkGrid(make_url_sol(url))
+##
+
+##
+
+
+# %%  Arnaud
+
+url = "https://mathix.org/calisson/index.html?tab=fffffffttffffffsssftfsftstsftfsfssstfsfffssfffsffsffsfffsffffsftfsffsffsfffsfffsffffsfsfffttfsfsfftfsfttffffffffffffssfffffttsftffsffsfsffsffsffsffffsffsffsffsffffsfftfftfsfssfftfsftsttfsfssssftfsftfsfsffffffff"
+checkGrid((url))
+# %%#
+
+# Violaine_1
+url = "https://mathix.org/calisson/index.html?tab=fffffssfffffsssftfsftfssfftfsfsfffsfftfffffsfffffsfsftsffsfsfttsfffsffssftfsftfssfsfsfsstfsfsftfssfsffffffffffffffssffffttsftffsfffffftfsffssfsfttfsfsfssfftfsftsffsffsftfffsffffsfsfsfttfsfsstsftfsfsfsfsffffffff"
+
+checkGrid((url))
+
+# %%
+# Violaine_2
+url = "https://mathix.org/calisson/index.html?tab=fffffssfffffsssftfsftfssfftfsfsfffsfftfffffsfffffsfsftsffsfsfttsfffsffssftfsftfstfsfsfsstfsfsfsfssfsffffffffffffffssffffttsftffsfffffftfsffssfsfttfsfsfssfftfsftsffsffsftfffsffffsfsfsfttfsfsstsftfsfsfsfsffffffff"
+
+checkGrid((url))
+
+# -----------------------------------
+
 
 # %% segments placés à la main, un peu partout au pif
 
@@ -182,40 +218,54 @@ checkGrid("https://mathix.org/calisson/index.html?tab=fffssffffftsfsfsfstffftsfs
 checkGrid(make_url_sol("httpf://mathix.org/califfon/index.html?tab=ffffffffffttftfffftffftfftfffffffffffftfffffffffffffffftffffffffffffffffffftffftffffftfffffftfftffffffffffffffffffffffffftfffffffffffftfffffftffffffffffffffffffffffffffffffttfffftfttftfffffftffftfffffffffffffff"))
 
 # -----------------------------------
-# la grille exemple donnée dans le commentaire du code (deux solutions)
+# %% la grille exemple donnée dans le commentaire du code (deux solutions)
 
 orgurl="https://mathix.org/calisson/index.html?tab=fffstffsfftfffsfsssffsftsffftf"
 
 checkGrid(orgurl)
 
 # -----------------------------------
-# Cette même grille après correction
+# %% Cette même grille après correction
 
 orgurl="https://mathix.org/calisson/index.html?tab=fssffssftstffsfsfstfffsfffsftf"
 
 checkGrid(orgurl)
 
 # -----------------------------------
-# énigme 216 (cubes indéterminés)
+# %% énigme 216 (cubes indéterminés)
 
 orgurl="mathix.org/calisson/index.html?tab=fffffstfffffffsssfsfsfssfffstfftsfssstsfffsftfssssfsffsffffsfffsffsfffttfsfssfffftfffsstffsfsfssffffsfffsfsssstfffsffffffffstfssffffsfsffssssfsfffffstfsftffsffffffffssffffssssfffsfsfsfstffsfstfffffffsfsffssffsffftfffftfsssfssffffsffftffsffsftftssffftfffffsfsfsfsftffsffffssstftffsffsffsfsffstfsfffsfftfffsf216"
 
 checkGrid(orgurl)
 
 # -----------------------------------
-# énigme 216 corrigée (3 arêtes ajoutées)
+# %% énigme 216 corrigée (3 arêtes ajoutées)
 
 orgurl = "https://mathix.org/calisson/index.html?tab=fffffstfffffffsssfsfsfssfffstfftsfssstsfffsftfssssfsffsffffsfffsffsfffttfsfssfffftfffsstfftfsfssffffsfffsfsssstfffsffffffffstfssffffsfsffssssfsfffffstfsftffsffffffffssfffftsssfffsfsfsfstffsfstfffffffsfsffssffsffftfffftfsstfssffffsffftffsffsftftssffftfffffsfsfsfsftffsffffssstftffsffsffsfsffstfsfffsfftfffsf216"
 
 checkGrid(orgurl)
 
 # ----------------------
-# pour tester une énigme générée automatiquement
+# %% pour tester des énigmes générées automatiquement
+
+# ------------------ première méthode ------------
+# rapide, mais donne des grilles grossières
 
 from gen_calisson import randomEnigma
 
 dim = 6
 enigme, konf, sol = randomEnigma(dim, trace = True)
+
+checkGrid(make_url(enigme, dim))
+
+
+# ------------------ deuxième méthode ------------
+# lente, mais grille qui ressemblent à celles faites à la main
+
+from gen_calisson import randomEnigma_fromConstraints
+
+dim = 6
+enigme = randomEnigma_fromConstraints(dim, trace = True)
 
 checkGrid(make_url(enigme, dim))
 

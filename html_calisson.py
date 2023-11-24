@@ -6,7 +6,7 @@
 # Licence : CC BY-NC-SA 4.0 DEED
 # https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr
 # ============================================================================
-from calisson import projection, doSolve
+from calisson import projection, doSolve, encodeAxes
 from gen_calisson import encodage, encodeSolution
 import os, webbrowser, re
 
@@ -122,17 +122,18 @@ def make_url(enigme, dim):
     lsol = doSolve(enigme, dim)
     jeu = lsol[0]
     encsol = encodeSolution(encodage(jeu))
+    encsol.extend(encodeAxes(jeu))
 
-    for i in range(dim):
-        if not jeu[i, 0, 0]:
-            X,Y = projection((i, 0, 0))
-            encsol.append((X, Y, 'x'))
-        if not jeu[0, i, 0]:
-            X,Y = projection((0, i, 0))
-            encsol.append((X, Y, 'y'))
-        if not jeu[0, 0, i]:
-            X,Y = projection((0, 0, i))
-            encsol.append((X, Y, 'z'))
+    # for i in range(dim):
+    #     if not jeu[i, 0, 0]:
+    #         X,Y = projection((i, 0, 0))
+    #         encsol.append((X, Y, 'x'))
+    #     if not jeu[0, i, 0]:
+    #         X,Y = projection((0, i, 0))
+    #         encsol.append((X, Y, 'y'))
+    #     if not jeu[0, 0, i]:
+    #         X,Y = projection((0, 0, i))
+    #         encsol.append((X, Y, 'z'))
 
     # construction du paramètre de l'url
     str = ""
@@ -203,6 +204,7 @@ def make_enigma_from_url(orgurl):
 
     return enigme, dim
 
+# %%
 """
 ## pour tester, évaluer la ligne suivante :
 

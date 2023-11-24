@@ -275,7 +275,7 @@ def listCoord3D(X, Y, n):
 # --------------------------
 """
 idée : reprendre le code de dessin, mais encoder concrètement les arêtes
-sous a forme précédente plutôt que de les dessiner.
+sous la forme précédente plutôt que de les dessiner.
 """
 # encodage d'un petit cube de coordonnées 3D [i,j,k]
 # On tient compte de l'environnement du cube pour n'encoder que les arêtes
@@ -285,24 +285,26 @@ def encodeCube(jeu, i, j, k):
     jeu : matrice 3D représentant l'empilage de cubes
     i,j,k : coordonnées 3D de l'origine du petit cube
 
-    retourne la liste des arêtes visibles dans la configuration du jeu, avec la
-    syntaxe pour chaque arête correspondant à celle de l'énigme :
-    (X, Y, d) <-> coordonnées 2D et direction de l'arête
+    retourne une paire de deux listes contenant l'encodage en 2D et en 3D des arêtes visibles dans 
+    la configuration du jeu :
+    - la première liste avec la syntaxe pour chaque arête correspondant à celle de l'énigme :
+      (X, Y, d) <-> coordonnées 2D et direction de l'arête
+    - la deuxième liste avec les coordonnées 3D de l'origine de l'arête (x, y, z, d)
     """
     n = jeu.shape[0]
     def c(i, j, k):
         """ test de la présence d'un cube aux coordonnées [i,j,k]
         Avec prise en compte des bords pour contrôler le tracé des arêtes.
         """
-        if i < 0 or j < 0:
+        if i < 0 or j < 0 or k < 0:
             return True
-        if k < 0:
-            return True
-        if k == n:
+        if i == n or j == n or k == n:
             return False
-        if i == n or j == n:
+        
+        # on n'est pas sur un bord
+        if jeu[i,j,k] == -1: # cube indéterminé
             return False
-        return jeu[i, j, k]  # on n'est pas sur un bord
+        return jeu[i, j, k] == 1 # test de présence
 
     # la liste des arêtes 3D retournées pour le cube courant
     lar = []
@@ -345,8 +347,9 @@ def encodeCube(jeu, i, j, k):
         if not c(i, j+1, k) and c(i, j+1, k-1):
             lar.append((i,j+1,k,"x"))
 
-    # conversion en 2D, en éliminant les arêtes tracées le long des bords du grand cube
+    # élimination des arêtes tracées le long des bords du grand cube
     lar2 = []
+    lar3 = []
     for (x,y,z,d) in lar:
         if not( # les arêtes suivantes sont le long du tracé de l'hexagone englobant->ne pas encoder
             (x==0 and ((z==n and d=='y') or (y==n and d=='z'))) or
@@ -354,33 +357,37 @@ def encodeCube(jeu, i, j, k):
             (z==0 and ((y==n and d=='x') or (x==n and d=='y'))) ) :
             X,Y = projection([x,y,z])
             lar2.append((X,Y,d))
+            lar3.append((x,y,z,d))
 
-    return lar2
+    return lar2, lar3
 
 def encodage(jeu):
     """
     arg : jeu est la matrice 3D décrivant l'empilement
-    la fonction retourne une liste de doublets (coord,liste_arêtes) pour tous les cubes
-    dont certaines arêtes sont visibles.
+    la fonction retourne une liste de triplets (coord,liste_arêtes_2D, liste_arêtes_3D) 
+    pour tous les cubes dont certaines arêtes sont visibles.
     - coord est un triplet (i,j,k) donnant l'origine du cube
-    - liste_arêtes est une liste contenant les arêtes correspondantes, sous la forme
-      dans l'énigme (X, Y, d) <-> coordonnées 2D et direction de l'arête
+    - liste_arêtes_2D est une liste contenant les arêtes correspondantes, sous la forme
+      d'un triplet utiisée dans l'énigme (X, Y, d) <-> coordonnées 2D et direction de l'arête
+    - liste_arêtes_3D est une liste contenant les arêtes correspondantes, sous la forme
+      d'un quadruplet (x, y, z, d) -> coordonnées 3D de l'origine de l'arête
+      et direction de l'arête
     """
     lc = []
     n = jeu.shape[0]
     for i in range(n):
         for j in range(n):
             for k in range(n):
-                ec = encodeCube(jeu, i, j, k)
-                if len(ec) != 0: # cube visible
+                ec2, ec3 = encodeCube(jeu, i, j, k)
+                if len(ec2) != 0: # cube visible
                     # print(f'cube {i,j,k} visible : {ec}')
-                    lc.append(((i,j,k),ec))
+                    lc.append(((i,j,k),ec2, ec3))
     return lc
 
 # encodage des axes non masqués par des cubes
 def encodeAxes(jeu):
     """
-    encodage des axes 3D x, y ou z si pas de cube pour les cacher
+    encodage 2D des arêtes des axes 3D x, y ou z si pas de cube pour les cacher
     """
     la = []
     n = jeu.shape[0]
@@ -398,7 +405,7 @@ def encodeAxes(jeu):
 
 def encodeSolution(encJeu):
     # calcule l'encodage de la solution à partir de l'encodage du jeu
-    # On récupère l'ensemble des arêtes encodées pour tous les cubes de
+    # On récupère l'ensemble des arêtes encodées en 2D pour tous les cubes de
     # l'empilement puis on les regroupe dans un ensemble pour éviter les
     # doublons.
     # On retourne la liste correspondante

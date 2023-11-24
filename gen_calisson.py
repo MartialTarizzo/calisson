@@ -13,7 +13,7 @@ import math
 import random as rd
 import numpy as np
 
-from calisson import projection, doSolve, encodage, encodeSolution
+from calisson import projection, doSolve, encodage, encodeSolution, test_solver
 
 # %% Section 1 : génération d'un empilement
 # --------------------------------------------
@@ -181,14 +181,153 @@ def randomEnigma(n, konfig = [], trace = False):
 
 
 
-# %% test : décommenter cette section ##
-"""
-#--------- génération auto----------
-n = 6
-enigme, konf, sol = randomEnigma(n, trace = True)
+# %% test
+""" 
+#--------- génération auto version 1 ----------
 
+import time
+
+n = 6
+start = time.monotonic()
+enigme, konf, sol = randomEnigma(n, trace = True)
+print(f"durée de la génération d'une énigme de taille {n} : {time.monotonic()-start} s")
 # recherche de la solution de l'énigme
 from calisson import test_solver
 test_solver(enigme, n)
+
 # -----------------------------
 """
+
+# %% gen 2 : Tentative de nouvelle génération
+"""
+principe :
+- modif des fonctions d'encodage (cf calisson.py) qui retourne maintenant la liste des arêtes en 2D et en 3D
+- Pour générer une énigme :
+  + tirage d'un empilement au hasard
+  + encodage des arêtes
+  + on tire au hasard une arête 3D pour chaque cube visible
+  + dans  une matrice initialement remplie de -1, on tente de placer chacune des arêtes tirées en modifiant la matrice
+    pour tenir compte des contraintes. L'arête est conservée dans l'énigme si elle modifie la matrice.
+    (si elle ne modifie pas la matrice, c'est qu'elle est inutile pour la résolution :-)
+
+Ça ne donne pas des résultats fondamentalement différents de la technique précédente ...
+
+********************* ATTENTION *****************************
+la fonction suivante (randomEnigma_bis) est incomplète : 
+la résolution de l'énigme générée peut retourner retourner plusieurs résultats, dont certains
+cubes peuvent être indéterminés.
+
+En attente de suppresion ou d'amélioration ...
+
+****** !!!!!!! NE PAS UTILISER EN L'ÉTAT !!!!!!! *******************
+
+"""
+from calisson import placeSommet
+def randomEnigma_buggee(n, trace = False):
+    konfig = make_random_config(n)
+    # conversion en matrice 3D
+    jeu = matrice_jeu(konfig)
+    # encodage 2D des arêtes
+    encJeu = encodage(jeu)
+    # encodage de la solution sous la même forme que l'énigme
+    encSol = encodeSolution(encJeu)
+
+    M = -np.ones((n, n, n), dtype='int')
+
+    ar3 = [rd.choices(list(zip(e[1], e[2])), k=1)[0] for e in encJeu]
+
+    enig = []
+
+    for ar in ar3:
+        Mp = M.copy()
+        args = list(ar[1])
+        args.append(Mp)
+        r, Mp = placeSommet(*args)
+        if not(np.all(np.equal(Mp, M))):
+            if trace : print(f'Changement pour {ar}')
+            enig.append(ar[0])
+        else:
+            if trace : print(f'Pas de changement pour {ar}')
+        M = Mp
+
+    return enig
+
+"""test 
+
+n = 6
+enigme = randomEnigma_bis(n)
+test_solver(enigme, n)
+
+"""
+
+# %% Genération version 3 : en ne partant pas d'un empilement, mais créant une grille à partir de contraintes
+import time
+
+def randomEnigma_fromConstraints(n, trace = False):
+    start = time.monotonic()
+
+    # la liste qui sera retournée
+    enig = []
+    if trace : print(f"Génération d'une énigme de taille {n}")
+    if trace : print("élimination des cubes indéterminés")    
+    while True:
+        rs = doSolve(enig, n) # la liste des Résultats de la réSolution
+
+        rsf = list(filter(lambda m : -1 in m, rs)) # la liste des résultats contenant dess cubes indéterminés
+        if len(rsf) == 0:
+            break       # fin de la première phase
+        
+        # On prend une config au hasard, avec indétermination
+        M = rd.choice(rsf)
+
+        # on calcule l'origine (en projection 2D) de tous les cubes indéterminés
+        lci = []
+        for x in range(n):
+            for y in range(n):
+                for z in range(n):
+                    if M[x, y, z] == -1:
+                        lci.append(tuple(projection((x,y,z))))
+        # élimination des doublons
+        lci = list(set(lci)) 
+
+        # choix au hasard de l'origine d'un cube indéterminé et de la direction de l'arête
+        ci = list(rd.choice(lci))
+        cid = rd.choice(["x","y","z"])
+        
+        # ajout de l'arête à l'énigme
+        ci.append(cid)
+        enig.append(tuple(ci))
+
+    if trace : print(f'durée phase 1 : {time.monotonic()-start} s ({len(rs)} solution(s))')
+
+    # le résultat de la résolution ne contient plus d'indétermination, mais il peut y avoir plusieurs solutions.
+    # Idée : si on a plusieurs solutions, on calcule la différence entre les ensembles des arêtes de la deuxième 
+    # et de la première solution (arêtes dans la deuxième mais pas dans la première).
+    # On en choisit alors une au hasard qu'on ajoute à l'énigme  afin de lever l'ambiguïté.
+    # On relance la résolution sur la nouvelle énigme et on recommence tant qu'il existe plusieurs solutions.
+    if trace : print("élimination des solutions multiples")    
+    while len(rs)>1:
+        # calcul de la différence ensembliste des arêtes
+        ars = set(encodeSolution(encodage(rs[1]))) - set(encodeSolution(encodage(rs[0])))
+        # choix d'une arête au hasard
+        ar = rd.choice(list(ars))
+        # ajout à l'énigme
+        enig.append(ar)
+        # on relance la résolution
+        rs = doSolve(enig, n)
+
+    # fini : on a une solution unique !
+    if trace : print(f'durée totale : {time.monotonic()-start} s')
+    return enig
+
+# %% Test
+"""
+
+n = 5
+enigme = randomEnigma_fromConstraints(n, True)
+rs = test_solver(enigme, n)
+
+"""
+
+
+# %%

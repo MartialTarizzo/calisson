@@ -297,6 +297,7 @@ def randomEnigma_fromConstraints(n, trace = False):
         # ajout de l'arête à l'énigme
         ci.append(cid)
         enig.append(tuple(ci))
+        if trace : print(f"nombre d'arêtes dans l'enigme : {len(enig)}")
 
     if trace : print(f'durée phase 1 : {time.monotonic()-start} s ({len(rs)} solution(s))')
 
@@ -313,6 +314,7 @@ def randomEnigma_fromConstraints(n, trace = False):
         ar = rd.choice(list(ars))
         # ajout à l'énigme
         enig.append(ar)
+        if trace : print(f"nombre d'arêtes dans l'enigme : {len(enig)}")
         # on relance la résolution
         rs = doSolve(enig, n)
 

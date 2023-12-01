@@ -111,7 +111,7 @@ def openLocalBrowser(orgurl = ""):
     else:
         localurl = localDir + 'calisson.html?tab=' + orgurl.split('=')[-1]
 
-    webbrowser.get('Safari').open('file://' + localurl)
+    webbrowser.get(prefBrowser).open('file://' + localurl)
 
 
 def checkGrid(orgurl):
@@ -253,8 +253,8 @@ checkGrid(orgurl)
 
 from gen_calisson import randomEnigma
 
-dim = 6
-enigme, konf, sol = randomEnigma(dim, trace = True)
+dim = 2
+enigme = randomEnigma(dim, trace = True)
 
 checkGrid(make_url(enigme, dim))
 
@@ -264,7 +264,7 @@ checkGrid(make_url(enigme, dim))
 
 from gen_calisson import randomEnigma_fromConstraints
 
-dim = 6
+dim = 2
 enigme = randomEnigma_fromConstraints(dim, trace = True)
 
 checkGrid(make_url(enigme, dim))

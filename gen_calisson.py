@@ -109,15 +109,18 @@ def randomEnigma(n, konfig = [], trace = False):
     Pour une dimension de jeu valant n, génération d'un empilement, d'une énigme et de la solution.
     konfig est une matrice de dimension 2 (n x n) représentant un empilement (cf section 1)
 
-    Retourne l'énigme, la configuration de l'empilement et la solution
-    L'énigme et la solution sont sous la forme d'une liste de triplets (X,Y,direction) précisant
+    Retourne l'énigme
+    L'énigme est sous la forme d'une liste de triplets (X,Y,direction) précisant
     les arêtes à dessiner dans la zone de jeu.
 
     La durée d'exécution de la fonction peut être assez longue si n est grand car l'énigme retournée
     est nécessairement correcte : solution unique sans indétermination.
-    Ceci est assuré à l'aide d'une méthode basique essai/erreur :
-    - génération aléatoire de l'énigme
-    - tentative de résolution
+    Ceci est assuré à l'aide d'une méthode basique :
+    - génération aléatoire de l'énigme en tirant des arêtes au hasard à partir de l'empilement.
+      Ceci ne garantit pas que l'énige générée soit correcte (ayant une solution unique). Il est en
+      effet fréquent qu'à la fin de ctte phase, il reste des indéterminations/solutions multiples
+    - Pour obtenir une énigme correcte, on lance alors une génération par contraintes (cf fonction suivante)
+      Ceci ne conserve pas l'empilement de départ (l'ajout d'arêtes va modifier l'empilement)
 
     L'énigme n'est pas nécessairement 'subtile', aucun indice de difficulté n'est actuellement
     implémenté...
@@ -155,13 +158,13 @@ def randomEnigma(n, konfig = [], trace = False):
     enigme = []
     for c in encJeu:
         if len(c[1])>1: # plusieurs arêtes possibles
-            p = 0.25 # proba d'en prendre 2
+            p = 0.1 # proba d'en prendre 2
             if rd.random() < p:
                 enigme.extend(rd.choices(c[1], k=2))
             else: # on n'en prend qu'une !
                 enigme.extend(rd.choices(c[1], k=1))
         else: # une seule arête à dessiner
-            p = 0.8 - 1/n #  à ajuster par l'expérience ...
+            p = 0.5 - 1/n #  à ajuster par l'expérience ...
             if rd.random() < p:
                 enigme.extend(c[1])
 
@@ -215,10 +218,12 @@ import time
 def randomEnigma_fromConstraints(n, trace = False, enig = []):
     start = time.monotonic()
 
-    # la liste qui sera retournée
+    # la liste enig qui sera retournée est maintenant une arg par défaut.
+    # Ceci a été introduit pour la fonction qui suit randomEnigma_fromConstraints_incremental
 #    enig = []
     if trace : print(f"Génération d'une énigme de taille {n}")
-    if trace : print("élimination des cubes indéterminés")    
+    if trace : print("élimination des cubes indéterminés")   
+
     while True:
         rs = doSolve(enig, n) # la liste des Résultats de la réSolution
 
@@ -297,7 +302,7 @@ def randomEnigma_fromConstraints_incremental(n, trace = False):
 
 
 # %% Test
-"""
+
 
 deb = time.monotonic()
 # n = 4
@@ -306,7 +311,29 @@ deb = time.monotonic()
 # n = 5
 # enigme = randomEnigma_fromConstraints_incremental(n, True)
 
-n = 7
+n = 6
+enigme = randomEnigma_fromConstraints(n, True)
+
+# n = 8
+# enigme = randomEnigma_fromConstraints_incremental(n, True)
+
+print('======>' , time.monotonic() - deb)
+
+rs = test_solver(enigme, n)
+
+# %%
+
+deb = time.monotonic()
+# n = 4
+# enigme = randomEnigma_fromConstraints_incremental(n, True)
+
+# n = 5
+# enigme = randomEnigma_fromConstraints_incremental(n, True)
+
+# n = 5
+# enigme = randomEnigma_fromConstraints_incremental(n, True)
+
+n = 6
 enigme = randomEnigma_fromConstraints_incremental(n, True)
 
 # n = 8
@@ -316,7 +343,18 @@ print('======>' , time.monotonic() - deb)
 
 rs = test_solver(enigme, n)
 
-"""
+
+# %%
+
+deb = time.monotonic()
+
+n = 6
+enigme = randomEnigma(n, [], True)
+
+
+print('======>' , time.monotonic() - deb)
+
+rs = test_solver(enigme, n)
 
 # %% une taille 5 super jolie
 """

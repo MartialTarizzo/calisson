@@ -13,7 +13,7 @@ import math
 import random as rd
 import numpy as np
 
-from calisson import projection, doSolve, encodage, encodeSolution, test_solver
+from calisson import projection, doSolve, encodage, encodeSolution, encodeSolution3D, placeSommet, test_solver
 
 # %% Section 1 : génération d'un empilement
 # --------------------------------------------
@@ -176,7 +176,51 @@ def randomEnigma(n, konfig = [], trace = False):
     
     return enigme
 
+# Deuxième méthode à partir d'un empilement
+# La méthode précédente ne donne pas satisfaction : s'en remmetre au hasard pour trouver les arêtes
+# ne donne pas d'énigmes convaincantes (trop de lignes continues)
+# Idée : à partir d'un empilement généré aléatoirement (E1), on calcule la liste des arêtes (3D)
+# encodant la solution.
+# On initialise ensuite une jeu vide, et on choisit alors au hasard les arêtes de la solution
+# une par une en prenant en compte les contraintes imposées par l'arête choisie. 
+# Si l'arête modifie la configuration, on la conserve. Sinon on tire la suivante, ceci 
+# jusqu'à que la configuration soit entièrement déterminée (pas de petit cube égal à -1)
+# En passant en 2D, on obtient une énigme dont on est sûr que la configuration (E1) est solution,
+# mais on n'est pas certain que ce soit la seule...
+# On lance alors la fonction random_enigma_fromConstraints qui va rendre la solution unique
+# (la solution ne correspondra alors pas nécessairement à l'empilement de départ E1)
+# L'intérêt de la technique est de ne pas avoir à résoudre l'énigme pendant la première phase 
+# de placement des arêtes (on n'utilise que la fonction placeSommet, qui est rapide)
+def randomEnigma2(n, konfig = [], trace = False):
 
+    # Fabrication de l'empilement aléatoire 3D
+    konf = make_random_config(n)
+    mat = matrice_jeu(konf)
+    enc = encodage(mat)
+    encSol3D = encodeSolution3D(enc) 
+
+    # remplissage d'une configuration initialement vide avec les arêtes
+    mp = -np.ones((n,n,n), dtype='int')
+    lar3D = []
+    while len(encSol3D)>0 and -1 in mp:
+        ar = rd.choice(list(encSol3D))
+        r, mp2 = placeSommet(*ar, mp)
+        if np.any(mp - mp2):    # l'arête modifie la config
+            lar3D.append(ar)
+            mp = mp2
+        encSol3D = encSol3D - set((ar,))
+    
+    # plus aucun cube indéterminé. Construction de l'énigme 2D
+    enigme = []
+    for a in lar3D:
+        p = projection([a[0], a[1], a[2]])
+        p.append(a[3])
+        enigme.append(tuple(p))
+
+    # Vérification/modification de l'énigme pour que la solution soit unique
+    enigme = randomEnigma_fromConstraints(n, True, enigme)
+    
+    return enigme
 
 
 # %% test
@@ -185,9 +229,9 @@ def randomEnigma(n, konfig = [], trace = False):
 
 import time
 
-n = 8
+n = 7
 start = time.monotonic()
-enigme = randomEnigma(n, trace = True)
+enigme = randomEnigma2(n, trace = True)
 print(enigme)
 print(f"durée de la génération d'une énigme de taille {n} : {time.monotonic()-start} s")
 # recherche de la solution de l'énigme
@@ -302,7 +346,7 @@ def randomEnigma_fromConstraints_incremental(n, trace = False):
 
 
 # %% Test
-
+"""
 
 deb = time.monotonic()
 # n = 4
@@ -321,8 +365,11 @@ print('======>' , time.monotonic() - deb)
 
 rs = test_solver(enigme, n)
 
+"""
+
 # %%
 
+"""
 deb = time.monotonic()
 # n = 4
 # enigme = randomEnigma_fromConstraints_incremental(n, True)
@@ -343,9 +390,10 @@ print('======>' , time.monotonic() - deb)
 
 rs = test_solver(enigme, n)
 
+"""
 
 # %%
-
+"""
 deb = time.monotonic()
 
 n = 6
@@ -355,6 +403,8 @@ enigme = randomEnigma(n, [], True)
 print('======>' , time.monotonic() - deb)
 
 rs = test_solver(enigme, n)
+
+"""
 
 # %% une taille 5 super jolie
 """

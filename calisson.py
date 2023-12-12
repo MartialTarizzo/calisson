@@ -415,6 +415,18 @@ def encodeSolution(encJeu):
             s.add(c)
     return list(s)
 
+def encodeSolution3D(encJeu):
+    # calcule l'encodage de la solution à partir de l'encodage du jeu
+    # On récupère l'ensemble des arêtes encodées en 3D pour tous les cubes de
+    # l'empilement puis on les regroupe dans un ensemble pour éviter les
+    # doublons.
+    # On retourne la liste correspondante
+    s = set()
+    for p in encJeu:
+        for c in p[2]:
+            s.add(c)
+    return s
+
 
 
 # --------------------------

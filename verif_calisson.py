@@ -93,7 +93,7 @@ import webbrowser
 prefBrowser = 'Safari' # ou 'Chrome', 'Firefox'
 
 # répertoire de travail
-localDir = '/Users/martial/Desktop/calisson 2/calisson_js/'
+localDir = '/Users/martial/Desktop/calisson/calisson_js/'
 # -----------------------------
 
 # pour travailler localement, sans accès internet
@@ -141,19 +141,38 @@ def make_url_sol(url):
 
 
 # %% #######################################
-""" Tests : quelques résultats obtenus avec le mode d'emploi décrit ci-dessus
+""" 
+Tests : quelques résultats obtenus avec le mode d'emploi décrit ci-dessus
 
 - évaluer ce fichier ou incorporer la ligne suivante dans un fichier vide :
 
 from verif_calisson import checkGrid, make_url_sol
 
 - puis évaluer (ou coller dans le fichier vide) un à un les blocs de codes entre '----------------'
-
+"""
 # -----------------------------------
 # %% conception à partir de rien ...
-
+"""
 url = ""
+
 checkGrid(url)
+
+"""
+# %% Joyeux Noël !
+
+url = "https://mathix.org/calisson/index.html?tab=ffffffffffffffffftfffftfffffffffffffffffffffffffffffttftfffffffffffffftfftfffttfffffffffffftffftfffffffffffftfffffftffffffffffffffffffffffffffffffffffffffttfffftfffffffffffffftfftfffffffffffffffffffftffffffffffftttfftffffffffffffffftffffffffffffffffffffffffffffffftffffffffffffftffffffffffffffffffffffffftfffffffffffffffffffffffffffftfftfffffffffffffttffftfffffffffftffftffftfffffftfftftffffftffffffffffffffffffffffffftfffffffffffffffffftfffftfftffffftfffffffffffffffffffffftffftffffffftftfftffffffffffttfffffffffffffftfffffffffffffffftffffffffffffffff"
+
+checkGrid(url)
+
+"""
+l'évaluation de 
+
+solurl = make_url_sol(url)
+
+donne :
+'https://mathix.org/calisson/index.html?tab=fffffssfffffffffstsffftfsfssffsfffssffffsfsffffffffsttftfsfsfssffffffstsftfsfttssfsffsffssftfsftsssfsffsffsftfsssfstsfsffsffsffsfsfffsfffssfsffsfsffsfsfsfttfsfftsfsfffffsfsffftfftffsfffsfsffffsfsfssftfsfsffssffftttfftfsfsfffffsfsffftfsffffffffsfsffsffffffffsfffffstsfsfffffssfsftffsffffffssfffffffffssffftfsfssffsfffssffffssffffffffstsftfsfsfssfffffsttfsftfssssfsfsftssftfsftsssfsftfststfsffstssfsfsfssssfsffsffsfffsfstssfsffsffsffsffsfftfsfftfftffsfftffsffsffffsffsffsffsfftfsftffssffstftfftsfsfffffsfttffsfffsfffffsftfsffffffffsffffstsfsffffssfsfffsf'
+
+"""
 
 
 # %% Essais de conception à la main sur plusieurs prénoms
@@ -161,15 +180,13 @@ checkGrid(url)
 
 url = "https://mathix.org/calisson/index.html?tab=ffffffffffffffffffttfftfffffffffftfffftfftfffffffffffffttftffffffffffftffffffffftfffftfffffffffftffffffffftffffffffffffffffffftffffffffffftffffffffffffttfffffffffftftfffffffffffffffffffffffffffffffftftfffffffff"
 checkGrid(make_url_sol(url))
-##
-
-##
 
 
 # %%  Arnaud
 
 url = "https://mathix.org/calisson/index.html?tab=fffffffttffffffsssftfsftstsftfsfssstfsfffssfffsffsffsfffsffffsftfsffsffsfffsfffsffffsfsfffttfsfsfftfsfttffffffffffffssfffffttsftffsffsfsffsffsffsffffsffsffsffsffffsfftfftfsfssfftfsftsttfsfssssftfsftfsfsffffffff"
 checkGrid((url))
+
 # %%#
 
 # Violaine_1
@@ -245,6 +262,7 @@ orgurl = "https://mathix.org/calisson/index.html?tab=fffffstfffffffsssfsfsfssfff
 
 checkGrid(orgurl)
 
+"""
 # ----------------------
 # %% pour tester des énigmes générées automatiquement
 

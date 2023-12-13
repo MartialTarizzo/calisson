@@ -191,25 +191,41 @@ def randomEnigma(n, konfig = [], trace = False):
 # (la solution ne correspondra alors pas nécessairement à l'empilement de départ E1)
 # L'intérêt de la technique est de ne pas avoir à résoudre l'énigme pendant la première phase 
 # de placement des arêtes (on n'utilise que la fonction placeSommet, qui est rapide)
-def randomEnigma2(n, konfig = [], trace = False):
+def randomEnigma2(n, konfig = [], trace = False, easy = 0):
+
+    def norme(enc):
+        x, y, z = enc[:3]
+        return abs(x) + abs(y) + abs(z)
 
     # Fabrication de l'empilement aléatoire 3D
     konf = make_random_config(n)
     mat = matrice_jeu(konf)
     enc = encodage(mat)
-    encSol3D = encodeSolution3D(enc) 
+    # encSol3D = encodeSolution3D(enc) 
+    encSol3D = sorted(encodeSolution3D(enc), key=norme, reverse=True)
 
     # remplissage d'une configuration initialement vide avec les arêtes
     mp = -np.ones((n,n,n), dtype='int')
     lar3D = []
-    while len(encSol3D)>0 and -1 in mp:
-        ar = rd.choice(list(encSol3D))
+    idx = 0
+    while len(encSol3D) > 0 and -1 in mp:
+        idx = (idx + 9) % len(encSol3D)
+        # ar = rd.choice(list(encSol3D))
+        ar = encSol3D[idx]
         r, mp2 = placeSommet(*ar, mp)
         if np.any(mp - mp2):    # l'arête modifie la config
             lar3D.append(ar)
             mp = mp2
-        encSol3D = encSol3D - set((ar,))
+        encSol3D.remove(ar)
     
+    # Ajout d'arêtes supplémentaires en fonction de la facilité de la grille
+    for _ in range(easy * len(encSol3D) // 10):
+        idx = (idx + 9) % len(encSol3D)
+        #ar = rd.choice(encSol3D)
+        ar = encSol3D[idx]
+        lar3D.append(ar)
+        encSol3D.remove(ar)
+
     # plus aucun cube indéterminé. Construction de l'énigme 2D
     enigme = []
     for a in lar3D:
@@ -337,14 +353,43 @@ def randomEnigma_fromConstraints(n, trace = False, enig = []):
 # connue. Les seuls cubes indéterminés se retrouveront donc sur la frontière de la grille à calculer.
 # En pratique, cela se révèle nettement plus rapide, et fournit des grilles difficiles et denses !
 def randomEnigma_fromConstraints_incremental(n, trace = False):
-    if n < 5:
+    nmax = 5
+    if n <= nmax:
         return randomEnigma_fromConstraints(n, trace)
-    enigme = randomEnigma_fromConstraints(4, trace)
-    for nn in range(n - 4):
-        enigme = randomEnigma_fromConstraints(5 + nn, trace, enigme)
+    enigme = randomEnigma_fromConstraints(nmax, trace)
+    for nn in range(n - nmax):
+        enigme = randomEnigma_fromConstraints(nmax + 1 + nn, trace, enigme)
     return enigme
 
 
+# %% test
+#""" 
+#--------- génération auto version 1 ----------
+
+import time
+
+#rd.seed(0)
+n = 6
+start = time.monotonic()
+#enigme = randomEnigma_fromConstraints_incremental(n, trace = True)
+enigme = randomEnigma2(n, trace = True, easy=0)
+#print(enigme)
+print(f"durée de la génération d'une énigme de taille {n} : {time.monotonic()-start} s")
+# recherche de la solution de l'énigme
+from calisson import test_solver
+test_solver(enigme, n)
+'fini'
+
+# test_solver(enigme, n+1)
+# enigme = randomEnigma_fromConstraints(n+1, True, enigme)
+# test_solver(enigme, n+1)
+
+
+
+# -----------------------------
+#"""
+
+# 
 # %% Test
 """
 

@@ -27,6 +27,12 @@ import random as rd
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Importation de Numba si présent dans l'environnement de travail
+try:
+    from numba import jit
+except ImportError:
+    jit = None
+
 
 
 # %% Section 1 : Représentation graphique d'une configuration
@@ -599,6 +605,15 @@ def placeSommet(xs, ys, zs, d, M):
 
     # fin de la fonction : le sommet s a été placé avec succès, modifs enregistrées dans Mp
     return (True, Mp)
+
+# Compilation si Numba est disponible.
+# Compiler PlaceSommet permet une amélioration substantielle de la rapidité globale des fonctions
+# permettant la génération/résolution d'une énigme.
+# En effet, cette fonction est centrale (propagation des contraintes) et est appelée de très nombreuses
+# fois (à chaque essai de placement d'une arête)
+if jit is not None:
+    placeSommet = jit(placeSommet, nopython = True)
+
 
 # %% Section 3 : Résolution
 

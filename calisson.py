@@ -78,10 +78,70 @@ def lineproj(A, B, **kwargs):
     Bp = projection(B)
     line(Ap, Bp, **kwargs)
 
-# Dessin d'un petit cube de coordonnées 3D [i,j,k]
+# Le dessin des calissons : losanges remplis selon les trois couleurs suivantes
+color_poly_xy = "aqua"      # losange horizontal
+color_poly_xz = "pink"      # losange incliné vers la droite
+color_poly_yz = "khaki"     # losange incliné vers la gauche
+
+def drawPolygons(jeu):
+    """
+    jeu est la matrice 3D représentant l'empilement des cubes
+    dessine les losanges correspondants aux faces visibles des petits cubes, ainsi
+    que les faces visibles du grand cube englobant.
+    """
+    # les trois fonctions qui suivent dessinent les différentes faces à partir
+    # du point de coordonnées 3D (i,j,k)
+    def losange_xy(i, j, k):
+        A = projection([i, j, k]); B = projection([i+1, j, k])
+        C = projection([i+1, j+1, k]); D = projection([i, j+1, k])
+        lX = [p[0] for p in (A, B, C, D)]
+        lY = [p[1] for p in (A, B, C, D)]
+        plt.fill(lX, lY, facecolor = color_poly_xy)
+        
+    def losange_xz(i, j, k):
+        A = projection([i, j, k]); B = projection([i, j, k+1])
+        C = projection([i+1, j, k+1]); D = projection([i+1, j, k])
+        lX = [p[0] for p in (A, B, C, D)]
+        lY = [p[1] for p in (A, B, C, D)]
+        plt.fill(lX, lY, facecolor = color_poly_xz)
+        
+    def losange_yz(i, j, k):
+        A = projection([i, j, k]); B = projection([i, j, k+1])
+        C = projection([i, j+1, k+1]); D = projection([i, j+1, k])
+        lX = [p[0] for p in (A, B, C, D)]
+        lY = [p[1] for p in (A, B, C, D)]
+        plt.fill(lX, lY, facecolor = color_poly_yz)
+
+    # Balayage de tous les cubes de l'empilement
+    n = jeu.shape[0]
+    for i in range(n):
+        for j in range(n):
+            for k in range(n):
+                if jeu[i, j, k] == -1: # cube indéterminé -> on ne fait rien
+                    continue
+
+                if jeu[i, j, k] == 1:
+                    # cube rempli: on ne dessine que les faces au niveau du grand cube
+                    if i == n - 1:
+                        losange_yz(i+1, j, k)
+                    if j == n - 1:
+                        losange_xz(i, j+1, k)
+                    if k == n - 1:
+                        losange_xy(i, j, k+1)
+                    continue
+                # cube vide : on ne dessine que si les cubes qui l'entourent sont remplis 
+                # ou si on se trouve sur les faces du grand cube passant par l'origine
+                if i ==0 or jeu[i-1, j, k] == 1:
+                    losange_yz(i, j, k)
+                if j ==0 or jeu[i, j-1, k] == 1:
+                    losange_xz(i, j, k)
+                if k ==0 or jeu[i, j, k-1] == 1:
+                    losange_xy(i, j, k)
+
+# Dessin des arêtes d'un petit cube de coordonnées 3D [i,j,k]
 # On tient compte de l'environnement du cube pour le dessiner que les arêtes
 # nécessaires.
-# Le cube est dessiné en bleu s'il est correct, en gris si inderterminé
+# Le cube est dessiné en gris si inderterminé
 def projCube(jeu, i, j, k):
     n = jeu.shape[0]
     def c(i, j, k):
@@ -219,6 +279,7 @@ def draw_config(jeu):
     # du calcul des projections (cf fonction 'projection')
     plt.subplot(111,adjustable='box', aspect=1/np.sqrt(3))
     #plt.axis('equal')
+    drawPolygons(jeu)
     drawHex(n)
     drawAxes(jeu)
     for i in range(n):
@@ -455,6 +516,7 @@ def encodeSolution3D(encJeu):
 # - vérification de la cohérence du sommet en cours de placement avec ce qui existe déjà
 # - si on peut ajouter le sommet, modification de la matrice en prenant en compte les contraintes
 #  afin de fixer la valeur des cubes dépendant des arêtes centrées sur le sommet
+
 def placeSommet(xs, ys, zs, d, M):
     """
     Arguments :
@@ -469,7 +531,7 @@ def placeSommet(xs, ys, zs, d, M):
     l'ajout de s
     """
     n = M.shape[0]
-    Mp = M.copy()  # copie de M
+    # Mp = M.copy()  # copie de M
 
     # trait vertical (selon z)
     if d == "z":
@@ -495,6 +557,8 @@ def placeSommet(xs, ys, zs, d, M):
             return (False, M)  # échec
         if ys == n and 1 in M[xs:, ys-1, zs:]:
             return (False, M)  # échec
+        
+        Mp = M.copy()  # copie de M
 
         # pas d'incompatibilités avec les contraintes existantes :
         # on modifie la matrice en ajoutant les contraintes liées à l'arête
@@ -546,6 +610,8 @@ def placeSommet(xs, ys, zs, d, M):
             return (False, M)  # échec
         if zs == n and 1 in M[xs:, ys:, zs-1]:
             return (False, M)  # échec
+        
+        Mp = M.copy()  # copie de M
 
         Mp[:xs+1, :ys, :zs] = 1
         Mp[xs:, ys:, zs:] = 0
@@ -582,6 +648,8 @@ def placeSommet(xs, ys, zs, d, M):
             return (False, M)  # échec
         if xs == n and 1 in M[xs-1, ys:, zs:]:
             return (False, M)  # échec
+        
+        Mp = M.copy()  # copie de M
 
         Mp[:xs, :ys+1, :zs] = 1
         Mp[xs:, ys:, zs:] = 0
@@ -814,6 +882,7 @@ def draw_solutions(enigma, n, lSols, cellSize = 4, file = None):
 
     # Le tracé d'une solution dans le subplot courant
     def draw_solution(s):
+        drawPolygons(s)
         drawHex(n)
         drawAxes(s)
         for i in range(n):

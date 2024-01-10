@@ -290,7 +290,7 @@ def randomEnigma2(n, konfig = [], trace = False, easy = 0):
     if trace : print(f"énigme par empilement construite")
 
     # Vérification/modification de l'énigme pour que la solution soit unique
-    enigme = randomEnigma_fromConstraints(n, True, enigme)
+    enigme = randomEnigma_fromConstraints(n, trace, enigme)
     
     return enigme
 
@@ -318,15 +318,16 @@ def randomEnigma_fromConstraints(n, trace = False, enig = []):
     if trace : print("élimination des cubes indéterminés")   
 
     while True:
-        rs = doSolve(enig, n) # la liste des Résultats de la réSolution
+        rs = doSolve(enig, n, filterFunc = lambda m : -1 in m) # la liste des Résultats de la réSolution
 
         rsf = list(filter(lambda m : -1 in m, rs)) # la liste des résultats contenant des cubes indéterminés
+
         if len(rsf) == 0:
             break       # fin de la première phase
         
-        # On prend une config au hasard, avec indétermination
-        M = rd.choice(rsf)
-
+        # # On prend une config au hasard, avec indétermination
+        # M = rd.choice(rsf)
+        M = rs[0]
         # on calcule l'origine (en projection 2D) de tous les cubes indéterminés
         lci = []
         for x in range(n):
@@ -363,8 +364,12 @@ def randomEnigma_fromConstraints(n, trace = False, enig = []):
         enig.append(ar)
         if trace : print(f"nombre d'arêtes dans l'enigme : {len(enig)}")
         # on relance la résolution
-        rs = doSolve(enig, n)
 
+        rs = doSolve(enig, n, nSolMax=2)
+
+    nCubes = np.sum(rs)
+    if trace: print(f'nombre de cubes dans l\'empilement : {nCubes} ({100 * nCubes / n**3:.1f} %)')
+    
     # fini : on a une solution unique !
     if trace : print(f'durée totale : {time.monotonic()-start} s')
 
@@ -406,11 +411,12 @@ n = 6
 start = time.monotonic()
 # enigme = randomEnigma_fromConstraints(n, trace = True)
 enigme = randomEnigma2(n, trace = True, easy=0)
+# enigme = randomEnigma_fromConstraints_incremental(n, trace = True)
 #print(enigme)
 print(f"durée de la génération d'une énigme de taille {n} : {time.monotonic()-start} s")
 # recherche de la solution de l'énigme
 from calisson import test_solver
-test_solver(enigme, n)
+M = test_solver(enigme, n)
 
 # test_solver(enigme, n+1)
 # enigme = randomEnigma_fromConstraints(n+1, True, enigme)
@@ -418,6 +424,33 @@ test_solver(enigme, n)
 
 from html_calisson import make_url
 print(make_url(enigme, n))
+
+# %%
+n = 6
+ng = 10
+
+start = time.monotonic()
+for i in range(ng):
+    enigme = randomEnigma_fromConstraints(n, trace = False)
+    # enigme = randomEnigma2(n, trace = True, easy=0)
+    # enigme = randomEnigma_fromConstraints_incremental(n, trace =True) 
+    print (f'énigme {i} générée')
+print(f"durée de la génération de {ng} énigmes de taille {n} : {time.monotonic()-start} s")
+start = time.monotonic()
+for i in range(ng):
+    # enigme = randomEnigma_fromConstraints(n, trace = True)
+    enigme = randomEnigma2(n, trace = False, easy=0)
+    # enigme = randomEnigma_fromConstraints_incremental(n, trace =True) 
+    print (f'énigme {i} générée')
+print(f"durée de la génération de {ng} énigmes de taille {n} : {time.monotonic()-start} s")
+start = time.monotonic()
+for i in range(ng):
+    # enigme = randomEnigma_fromConstraints(n, trace = True)
+    # enigme = randomEnigma2(n, trace = True, easy=0)
+    enigme = randomEnigma_fromConstraints_incremental(n, trace =False) 
+    print (f'énigme {i} générée')
+print(f"durée de la génération de {ng} énigmes de taille {n} : {time.monotonic()-start} s")
+
 
 """
 # -----------------------------

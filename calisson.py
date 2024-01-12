@@ -778,8 +778,12 @@ def doSolve(enigme, n, trace = False, filterFunc = None, nSolMax = -1):
     au cours du calcul.
     Pour chaque résultat contenant des cubes non déterminés, on recherche un point
     fixe : résultat n'évoluant plus lors de la résolution.
+
     Si filterFunc != None, c'est une fonction de sélection : la première solution
     pour laquelle filterFunc(sol)==True sera la seule rendue par doSolve
+    
+    nSolMax permet de limiter le nombre de solutions retournées par cette fonction
+    Si égal à -1, toute les solutions seront rendues.
     """
 
     # la fonction de recherche du point fixe. Un résultat en argument.

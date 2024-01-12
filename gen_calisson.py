@@ -13,7 +13,7 @@ import math
 import random as rd
 import numpy as np
 
-from calisson import projection, doSolve, encodage, encodeSolution, encodeSolution3D, placeSommet, test_solver
+from calisson import projection, doSolve, encodage, encodeSolution, encodeSolution3D, placeSommet, test_solver, draw_config
 
 # %% Section 1 : génération d'un empilement
 # --------------------------------------------
@@ -92,9 +92,9 @@ def make_random_config(n, nbCubes = 0, trace = False):
     retourne une configuration aléatoire pour un jeu
     de dimension n contenant m cubes
     """
-    # nombre de cubes dans la configuration, tiré au hasard entre n^3/3 et n^3/2 si non fourni
+    # nombre de cubes dans la configuration, tiré au hasard entre deux bornes si non fourni
     if nbCubes == 0:
-        nbCubes = rd.randint(n**3//3, 2*n**3//3)
+        nbCubes = rd.randint(3*n**3//10, 6*n**3//10) # bornes à ajuster
         if trace: print(f"on a {nbCubes} cubes dans la configuration")
 
     k, f = make_config(n, nbCubes)
@@ -176,7 +176,7 @@ def randomEnigma(n, konfig = [], trace = False):
     return enigme
 
 # Deuxième méthode à partir d'un empilement
-# La méthode précédente ne donne pas satisfaction : s'en remmetre au hasard pour trouver les arêtes
+# La méthode précédente ne donne pas satisfaction : s'en remettre au hasard pour trouver les arêtes
 # ne donne pas d'énigmes convaincantes (trop de lignes continues)
 # Idée : à partir d'un empilement généré aléatoirement (E1), on calcule la liste des arêtes (3D)
 # encodant la solution.
@@ -231,7 +231,9 @@ def randomEnigma2(n, konfig = [], trace = False, easy = 0):
     enc = encodage(mat)
     encSol3D = encodeSolution3D(enc) 
 
-    if trace : print(f"Empilement de taille {n} terminé")
+    # draw_config(mat) # pour voir l'empilement initial
+
+    if trace : print(f"Empilement de taille {n} terminé ({np.sum(mat)} cubes)")
 
     # remplissage d'une configuration initialement vide avec les arêtes
     mp = -np.ones((n,n,n), dtype='int')
@@ -273,7 +275,10 @@ def randomEnigma2(n, konfig = [], trace = False, easy = 0):
         # idx = (idx + 123321) % len(encSol3D)
         ar = rd.choice(list(encSol3D))
         # ar = encSol3D[idx]
-        lar3D.append(ar)
+        if not ar3Dconnected(ar):
+            lar3D.append(ar)
+        elif rd.random() < 0.5:
+            lar3D.append(ar)
         encSol3D.remove(ar)
 
 
@@ -297,8 +302,6 @@ def randomEnigma2(n, konfig = [], trace = False, easy = 0):
 
 
 # %% Genération version 3 : en ne partant pas d'un empilement, mais créant une grille à partir de contraintes
-
-import time
 
 # L'idée ici est de partir des contraintes (-> les segments de l'énigme) pour générer la grille.
 # En partant d'une énigme vide, on effectue une boucle calculant les petits cubes indéterminés (au départ, ils le sont tous !)
@@ -399,7 +402,6 @@ def randomEnigma_fromConstraints_incremental(n, trace = False):
         enigme = randomEnigma_fromConstraints(nmax + 1 + nn, trace, enigme)
     return enigme
 
-
 # %% test
 """ 
 #--------- génération auto version 1 ----------
@@ -451,93 +453,3 @@ for i in range(ng):
     print (f'énigme {i} générée')
 print(f"durée de la génération de {ng} énigmes de taille {n} : {time.monotonic()-start} s")
 
-
-"""
-# -----------------------------
-"""
-
-# 
-# %% Test
-"""
-
-deb = time.monotonic()
-# n = 4
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-# n = 5
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-n = 6
-enigme = randomEnigma_fromConstraints(n, True)
-
-# n = 8
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-print('======>' , time.monotonic() - deb)
-
-rs = test_solver(enigme, n)
-
-"""
-
-# %%
-
-"""
-deb = time.monotonic()
-# n = 4
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-# n = 5
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-# n = 5
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-n = 6
-enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-# n = 8
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-print('======>' , time.monotonic() - deb)
-
-rs = test_solver(enigme, n)
-
-"""
-
-# %%
-"""
-deb = time.monotonic()
-
-n = 6
-enigme = randomEnigma(n, [], True)
-
-
-print('======>' , time.monotonic() - deb)
-
-rs = test_solver(enigme, n)
-
-"""
-
-# %% une taille 5 super jolie
-"""
-enigme = [(0, -2, 'x'),
- (2, -4, 'y'),
- (-1, 1, 'x'),
- (1, 1, 'y'),
- (-3, -1, 'y'),
- (1, -3, 'x'),
- (0, 4, 'x'),
- (-2, -4, 'x'),
- (0, 6, 'z'),
- (0, 0, 'y'),
- (3, 1, 'x'),
- (1, 3, 'z'),
- (-1, 5, 'y'),
- (-3, 1, 'x'),
- (-4, -2, 'z'),
- (4, -2, 'z'),
- (-1, -5, 'z'),
- (2, -2, 'y'),
- (-3, 3, 'x')]
-test_solver(enigme, 5)
-"""

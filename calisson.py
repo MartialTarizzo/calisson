@@ -78,10 +78,70 @@ def lineproj(A, B, **kwargs):
     Bp = projection(B)
     line(Ap, Bp, **kwargs)
 
-# Dessin d'un petit cube de coordonnées 3D [i,j,k]
+# Le dessin des calissons : losanges remplis selon les trois couleurs suivantes
+color_poly_xy = "aqua"      # losange horizontal
+color_poly_xz = "pink"      # losange incliné vers la droite
+color_poly_yz = "khaki"     # losange incliné vers la gauche
+
+def drawPolygons(jeu):
+    """
+    jeu est la matrice 3D représentant l'empilement des cubes
+    dessine les losanges correspondants aux faces visibles des petits cubes, ainsi
+    que les faces visibles du grand cube englobant.
+    """
+    # les trois fonctions qui suivent dessinent les différentes faces à partir
+    # du point de coordonnées 3D (i,j,k)
+    def losange_xy(i, j, k):
+        A = projection([i, j, k]); B = projection([i+1, j, k])
+        C = projection([i+1, j+1, k]); D = projection([i, j+1, k])
+        lX = [p[0] for p in (A, B, C, D)]
+        lY = [p[1] for p in (A, B, C, D)]
+        plt.fill(lX, lY, facecolor = color_poly_xy)
+        
+    def losange_xz(i, j, k):
+        A = projection([i, j, k]); B = projection([i, j, k+1])
+        C = projection([i+1, j, k+1]); D = projection([i+1, j, k])
+        lX = [p[0] for p in (A, B, C, D)]
+        lY = [p[1] for p in (A, B, C, D)]
+        plt.fill(lX, lY, facecolor = color_poly_xz)
+        
+    def losange_yz(i, j, k):
+        A = projection([i, j, k]); B = projection([i, j, k+1])
+        C = projection([i, j+1, k+1]); D = projection([i, j+1, k])
+        lX = [p[0] for p in (A, B, C, D)]
+        lY = [p[1] for p in (A, B, C, D)]
+        plt.fill(lX, lY, facecolor = color_poly_yz)
+
+    # Balayage de tous les cubes de l'empilement
+    n = jeu.shape[0]
+    for i in range(n):
+        for j in range(n):
+            for k in range(n):
+                if jeu[i, j, k] == -1: # cube indéterminé -> on ne fait rien
+                    continue
+
+                if jeu[i, j, k] == 1:
+                    # cube rempli: on ne dessine que les faces au niveau du grand cube
+                    if i == n - 1:
+                        losange_yz(i+1, j, k)
+                    if j == n - 1:
+                        losange_xz(i, j+1, k)
+                    if k == n - 1:
+                        losange_xy(i, j, k+1)
+                    continue
+                # cube vide : on ne dessine que si les cubes qui l'entourent sont remplis 
+                # ou si on se trouve sur les faces du grand cube passant par l'origine
+                if i ==0 or jeu[i-1, j, k] == 1:
+                    losange_yz(i, j, k)
+                if j ==0 or jeu[i, j-1, k] == 1:
+                    losange_xz(i, j, k)
+                if k ==0 or jeu[i, j, k-1] == 1:
+                    losange_xy(i, j, k)
+
+# Dessin des arêtes d'un petit cube de coordonnées 3D [i,j,k]
 # On tient compte de l'environnement du cube pour le dessiner que les arêtes
 # nécessaires.
-# Le cube est dessiné en bleu s'il est correct, en gris si inderterminé
+# Le cube est dessiné en gris si inderterminé
 def projCube(jeu, i, j, k):
     n = jeu.shape[0]
     def c(i, j, k):
@@ -219,6 +279,7 @@ def draw_config(jeu):
     # du calcul des projections (cf fonction 'projection')
     plt.subplot(111,adjustable='box', aspect=1/np.sqrt(3))
     #plt.axis('equal')
+    drawPolygons(jeu)
     drawHex(n)
     drawAxes(jeu)
     for i in range(n):
@@ -426,14 +487,12 @@ def encodeSolution3D(encJeu):
     # On récupère l'ensemble des arêtes encodées en 3D pour tous les cubes de
     # l'empilement puis on les regroupe dans un ensemble pour éviter les
     # doublons.
-    # On retourne la liste correspondante
+    # On retourne le set correspondant
     s = set()
     for p in encJeu:
         for c in p[2]:
             s.add(c)
     return s
-
-
 
 # --------------------------
 # 2.3 : Résolution d'un énigme
@@ -455,6 +514,7 @@ def encodeSolution3D(encJeu):
 # - vérification de la cohérence du sommet en cours de placement avec ce qui existe déjà
 # - si on peut ajouter le sommet, modification de la matrice en prenant en compte les contraintes
 #  afin de fixer la valeur des cubes dépendant des arêtes centrées sur le sommet
+
 def placeSommet(xs, ys, zs, d, M):
     """
     Arguments :
@@ -469,7 +529,7 @@ def placeSommet(xs, ys, zs, d, M):
     l'ajout de s
     """
     n = M.shape[0]
-    Mp = M.copy()  # copie de M
+    # Mp = M.copy()  # copie de M
 
     # trait vertical (selon z)
     if d == "z":
@@ -495,6 +555,8 @@ def placeSommet(xs, ys, zs, d, M):
             return (False, M)  # échec
         if ys == n and 1 in M[xs:, ys-1, zs:]:
             return (False, M)  # échec
+        
+        Mp = M.copy()  # copie de M
 
         # pas d'incompatibilités avec les contraintes existantes :
         # on modifie la matrice en ajoutant les contraintes liées à l'arête
@@ -546,6 +608,8 @@ def placeSommet(xs, ys, zs, d, M):
             return (False, M)  # échec
         if zs == n and 1 in M[xs:, ys:, zs-1]:
             return (False, M)  # échec
+        
+        Mp = M.copy()  # copie de M
 
         Mp[:xs+1, :ys, :zs] = 1
         Mp[xs:, ys:, zs:] = 0
@@ -582,6 +646,8 @@ def placeSommet(xs, ys, zs, d, M):
             return (False, M)  # échec
         if xs == n and 1 in M[xs-1, ys:, zs:]:
             return (False, M)  # échec
+        
+        Mp = M.copy()  # copie de M
 
         Mp[:xs, :ys+1, :zs] = 1
         Mp[xs:, ys:, zs:] = 0
@@ -661,7 +727,7 @@ def trans2D_3D(enigme, n):
     Comme un point 2D peut correspondre à plusieurs points en 3D, on associe à chaque point 2D
     une liste de points en 3D.
     Cette fonction retourne donc une liste de listes, chacune étant associée à un sommet 2D.
-    Chaque élément est un n-uplet de la forme (x, y, z, "xyz")
+    Chaque élément est un n-uplet de la forme (x, y, z, "x|y|z")
     """
     # transformation de l'énigme 2D en énigme 3D
     enig3 = []
@@ -676,46 +742,54 @@ def trans2D_3D(enigme, n):
 # Le solveur : force brute !
 # fonction récursive qui essaie de placer toutes les arêtes désignés par l'énigme
 # jusqu'à épuisement du stock.
-def solve(lc3D, M, lr, p = 0, trace = False):
+# Une liste de contraintes lc3D peut donner plusieurs empilements différents.
+# écrite maintenant sous forme de générateur délivrant les solutions une par une.
+def solve(lc3D, M, p = 0, trace = False):
     """
     Args :
     - lc3d est une liste de contraintes 3D représentant l'énigme
     - M est la matrice de représentation du jeu
-    - lr est la liste modifiée par effet de bord, contenant les matrices solutions
     - p est le niveau de récursion, utilisé pour les impressions de traçage.
     - trace = True provoque l'impression des infos de traçage. Ralentit fortement la résolution
       en raison des impressions dans la console (qui peuvent être très nombreuses !)
 
+    retourne la matrice représentant la configuration après ajout des arêtes de lc3D si possible
     """
     if lc3D == []:
         if trace : print('<-', M)
-        lr.append(M)
+        yield (M)
         return
     for c in lc3D[0]:
         r, Mp = placeSommet(*c, M)
         if r:
             if trace : print("  "*(p+1), c)
-            solve(lc3D[1:], Mp, lr, p+1, trace = trace)
+            yield from solve(lc3D[1:], Mp, p+1, trace = trace)
         else:
             if trace : print("--"*(p+1), c)
 
 # automatisation de la recherche des points fixes
-def doSolve(enigme, n, trace = False):
+def doSolve(enigme, n, trace = False, filterFunc = None, nSolMax = -1):
     """
-    Gestion du solveur : la fonction solve retourne une liste de résultats possibles.
+    Gestion du solveur : la fonction solve retourne des résultats possibles 
+    (un par un car solve est un générateur).
     Chacun de ces résultats peut être incomplet (des cubes sont encore indéterminés)
     car des contraintes peuvent ne pas être exploitées totalement,
-    les déductions dépendant de décisions obtenues en plaçant des arêtes plus tard
+    les déductions dépendant de décisions obtenues en plaçant des arêtes plus tard 
     au cours du calcul.
     Pour chaque résultat contenant des cubes non déterminés, on recherche un point
     fixe : résultat n'évoluant plus lors de la résolution.
+
+    Si filterFunc != None, c'est une fonction de sélection : la première solution
+    pour laquelle filterFunc(sol)==True sera la seule rendue par doSolve
+    
+    nSolMax permet de limiter le nombre de solutions retournées par cette fonction
+    Si égal à -1, toute les solutions seront rendues.
     """
 
     # la fonction de recherche du point fixe. Un résultat en argument.
     # retourne le point fixe de ce résultat ou [] si résultat impossible
     def pf(r):
-        lrc = []
-        solve(lc3D, r, lrc, trace = trace)
+        lrc = list(solve(lc3D, r, trace = trace))
         if len(lrc) > 0:
             if np.array_equal(lrc[0], r): # pas d'évolution -> point fixe atteint
                 return r
@@ -726,8 +800,6 @@ def doSolve(enigme, n, trace = False):
 
     M = -np.ones((n, n, n), dtype='int')
     lc3D = trans2D_3D(enigme, n)
-    lr = []
-    solve(lc3D, M, lr, trace = trace)  # première passe
 
     # recherche du point fixe pour chaque solution trouvée, et fabrication
     # de la liste définitve des résultats.
@@ -739,10 +811,15 @@ def doSolve(enigme, n, trace = False):
     # Il faut donc chercher le point fixe pour tous les résultats retournés
     # par le premier appel à solve
     lrf = []
-    for r in lr:
+    for r in solve(lc3D, M, trace = trace):
         pfr = pf(r)
+        if (filterFunc is not None) and filterFunc(pfr):
+            # print('cc')
+            return [pfr]
         if len(pfr) > 0:
             lrf.append(pfr)
+        if len(lrf) == nSolMax:
+            return lrf
 
     return lrf
 
@@ -814,6 +891,7 @@ def draw_solutions(enigma, n, lSols, cellSize = 4, file = None):
 
     # Le tracé d'une solution dans le subplot courant
     def draw_solution(s):
+        drawPolygons(s)
         drawHex(n)
         drawAxes(s)
         for i in range(n):

@@ -13,7 +13,7 @@ import math
 import random as rd
 import numpy as np
 
-from calisson import projection, doSolve, encodage, encodeSolution, encodeSolution3D, placeSommet, test_solver
+from calisson import projection, doSolve, encodage, encodeSolution, encodeSolution3D, placeSommet, test_solver, draw_config
 
 # %% Section 1 : génération d'un empilement
 # --------------------------------------------
@@ -24,7 +24,6 @@ au dessus du carré de coordonnées (i,j) dans le plan horizontal.
 L'index du carré (i,j) dans la liste est i * n + j , i=0..n-1, j=0..n-1
 le carré (0,0) est le plus éloigné de l'observateur, base i,j,k directe
 """
-
 
 # génération d'une configuration contenant nbCubes dans un grand cube de côté n
 # La config est obtenue en ajoutant les cubes un à un à partir de la config vide,
@@ -93,9 +92,9 @@ def make_random_config(n, nbCubes = 0, trace = False):
     retourne une configuration aléatoire pour un jeu
     de dimension n contenant m cubes
     """
-    # nombre de cubes dans la configuration, tiré au hasard entre n^3/3 et n^3/2 si non fourni
+    # nombre de cubes dans la configuration, tiré au hasard entre deux bornes si non fourni
     if nbCubes == 0:
-        nbCubes = rd.randint(n**3//3, 2*n**3//3)
+        nbCubes = rd.randint(3*n**3//10, 6*n**3//10) # bornes à ajuster
         if trace: print(f"on a {nbCubes} cubes dans la configuration")
 
     k, f = make_config(n, nbCubes)
@@ -177,7 +176,7 @@ def randomEnigma(n, konfig = [], trace = False):
     return enigme
 
 # Deuxième méthode à partir d'un empilement
-# La méthode précédente ne donne pas satisfaction : s'en remmetre au hasard pour trouver les arêtes
+# La méthode précédente ne donne pas satisfaction : s'en remettre au hasard pour trouver les arêtes
 # ne donne pas d'énigmes convaincantes (trop de lignes continues)
 # Idée : à partir d'un empilement généré aléatoirement (E1), on calcule la liste des arêtes (3D)
 # encodant la solution.
@@ -192,39 +191,99 @@ def randomEnigma(n, konfig = [], trace = False):
 # L'intérêt de la technique est de ne pas avoir à résoudre l'énigme pendant la première phase 
 # de placement des arêtes (on n'utilise que la fonction placeSommet, qui est rapide)
 def randomEnigma2(n, konfig = [], trace = False, easy = 0):
+    # l'ensemble des extrémités des arêtes placée dans l'énigme
+    node2DSet = set()
+    # la liste des arêtes 2D rejetées lors de la première passe
+    arRejected = []
 
-    def norme(enc):
-        x, y, z = enc[:3]
-        return abs(x) + abs(y) + abs(z)
+    def ar3Dconnected(a):
+        """
+        retourne (True, False) si une des extrémités 2D de l'arête est dans l'ensemble node2DSet
+        """
+        
+        def onHexEdge(x, y):
+            # est-on sur un bord de l'hexagone ?
+            return abs(x)==n or 2*n - abs(x) == abs(y)
+
+        org2D = tuple(projection([a[0], a[1], a[2]]))
+        if org2D in node2DSet or onHexEdge(*org2D):
+            return True
+
+        x, y = org2D
+        d = a[3]
+        if d=="x":
+            dest2D = (x-1, y-1)
+        if d=="y":
+            dest2D =  (x+1, y-1)
+        if d=="z":
+            dest2D = (x, y+2)
+        
+        if dest2D in node2DSet or onHexEdge(*dest2D):
+                return True
+
+        node2DSet.add(org2D)
+        node2DSet.add(dest2D)
+        return False
 
     # Fabrication de l'empilement aléatoire 3D
     konf = make_random_config(n)
     mat = matrice_jeu(konf)
     enc = encodage(mat)
-    # encSol3D = encodeSolution3D(enc) 
-    encSol3D = sorted(encodeSolution3D(enc), key=norme, reverse=True)
+    encSol3D = encodeSolution3D(enc) 
+
+    # draw_config(mat) # pour voir l'empilement initial
+
+    if trace : print(f"Empilement de taille {n} terminé ({np.sum(mat)} cubes)")
 
     # remplissage d'une configuration initialement vide avec les arêtes
     mp = -np.ones((n,n,n), dtype='int')
     lar3D = []
     idx = 0
+
+    # première passe : on ne place que des arêtes isolées 
+    # non accrochées sur le bord de l'hexagone
     while len(encSol3D) > 0 and -1 in mp:
-        idx = (idx + 9) % len(encSol3D)
-        # ar = rd.choice(list(encSol3D))
-        ar = encSol3D[idx]
+        ar = rd.choice(list(encSol3D))
+        encSol3D.remove(ar)
+        if ar3Dconnected(ar):
+            arRejected.append(ar)
+            continue
         r, mp2 = placeSommet(*ar, mp)
         if np.any(mp - mp2):    # l'arête modifie la config
             lar3D.append(ar)
             mp = mp2
-        encSol3D.remove(ar)
+
+    if trace : print(f"Première passe : {len(lar3D)} arêtes")
+
+    # s'il reste des cubes indéterminés, c'est qu'on a épuisé
+    # la liste des arêtes en rejetant trop d'arêtes connectées.
+    # on place donc des arêtes connectées pour lever les 
+    # indéterminations.
+    while -1 in mp:
+        ar = rd.choice(arRejected)
+        r, mp2 = placeSommet(*ar, mp)
+        if np.any(mp - mp2):    # l'arête modifie la config
+            lar3D.append(ar)
+            mp = mp2
+        arRejected.remove(ar)
+
+    if trace : print(f"Ajout d'arêtes pour lever les indéterminations : {len(lar3D)} arêtes")
     
     # Ajout d'arêtes supplémentaires en fonction de la facilité de la grille
+    encSol3D = list(encSol3D) + arRejected
     for _ in range(easy * len(encSol3D) // 10):
-        idx = (idx + 9) % len(encSol3D)
-        #ar = rd.choice(encSol3D)
-        ar = encSol3D[idx]
-        lar3D.append(ar)
+        # idx = (idx + 123321) % len(encSol3D)
+        ar = rd.choice(list(encSol3D))
+        # ar = encSol3D[idx]
+        if not ar3Dconnected(ar):
+            lar3D.append(ar)
+        elif rd.random() < 0.5:
+            lar3D.append(ar)
         encSol3D.remove(ar)
+
+
+    if trace : print(f"ajout pour facilité {easy} -> {len(lar3D)} arêtes")
+
 
     # plus aucun cube indéterminé. Construction de l'énigme 2D
     enigme = []
@@ -233,39 +292,16 @@ def randomEnigma2(n, konfig = [], trace = False, easy = 0):
         p.append(a[3])
         enigme.append(tuple(p))
 
+    if trace : print(f"énigme par empilement construite")
+
     # Vérification/modification de l'énigme pour que la solution soit unique
-    enigme = randomEnigma_fromConstraints(n, True, enigme)
+    enigme = randomEnigma_fromConstraints(n, trace, enigme)
     
     return enigme
 
 
-# %% test
-""" 
-#--------- génération auto version 1 ----------
-
-import time
-
-n = 7
-start = time.monotonic()
-enigme = randomEnigma2(n, trace = True)
-print(enigme)
-print(f"durée de la génération d'une énigme de taille {n} : {time.monotonic()-start} s")
-# recherche de la solution de l'énigme
-from calisson import test_solver
-test_solver(enigme, n)
-test_solver(enigme, n+1)
-enigme = randomEnigma_fromConstraints(n+1, True, enigme)
-test_solver(enigme, n+1)
-
-
-
-# -----------------------------
-"""
-
 
 # %% Genération version 3 : en ne partant pas d'un empilement, mais créant une grille à partir de contraintes
-
-import time
 
 # L'idée ici est de partir des contraintes (-> les segments de l'énigme) pour générer la grille.
 # En partant d'une énigme vide, on effectue une boucle calculant les petits cubes indéterminés (au départ, ils le sont tous !)
@@ -285,15 +321,16 @@ def randomEnigma_fromConstraints(n, trace = False, enig = []):
     if trace : print("élimination des cubes indéterminés")   
 
     while True:
-        rs = doSolve(enig, n) # la liste des Résultats de la réSolution
+        rs = doSolve(enig, n, filterFunc = lambda m : -1 in m) # la liste des Résultats de la réSolution
 
         rsf = list(filter(lambda m : -1 in m, rs)) # la liste des résultats contenant des cubes indéterminés
+
         if len(rsf) == 0:
             break       # fin de la première phase
         
-        # On prend une config au hasard, avec indétermination
-        M = rd.choice(rsf)
-
+        # # On prend une config au hasard, avec indétermination
+        # M = rd.choice(rsf)
+        M = rs[0]
         # on calcule l'origine (en projection 2D) de tous les cubes indéterminés
         lci = []
         for x in range(n):
@@ -330,8 +367,12 @@ def randomEnigma_fromConstraints(n, trace = False, enig = []):
         enig.append(ar)
         if trace : print(f"nombre d'arêtes dans l'enigme : {len(enig)}")
         # on relance la résolution
-        rs = doSolve(enig, n)
 
+        rs = doSolve(enig, n, nSolMax=2)
+
+    nCubes = np.sum(rs)
+    if trace: print(f'nombre de cubes dans l\'empilement : {nCubes} ({100 * nCubes / n**3:.1f} %)')
+    
     # fini : on a une solution unique !
     if trace : print(f'durée totale : {time.monotonic()-start} s')
 
@@ -361,116 +402,54 @@ def randomEnigma_fromConstraints_incremental(n, trace = False):
         enigme = randomEnigma_fromConstraints(nmax + 1 + nn, trace, enigme)
     return enigme
 
-
 # %% test
-#""" 
+""" 
 #--------- génération auto version 1 ----------
-
+"""
 import time
 
 #rd.seed(0)
 n = 6
 start = time.monotonic()
-#enigme = randomEnigma_fromConstraints_incremental(n, trace = True)
+# enigme = randomEnigma_fromConstraints(n, trace = True)
 enigme = randomEnigma2(n, trace = True, easy=0)
+# enigme = randomEnigma_fromConstraints_incremental(n, trace = True)
 #print(enigme)
 print(f"durée de la génération d'une énigme de taille {n} : {time.monotonic()-start} s")
 # recherche de la solution de l'énigme
 from calisson import test_solver
-test_solver(enigme, n)
-'fini'
+M = test_solver(enigme, n)
 
 # test_solver(enigme, n+1)
 # enigme = randomEnigma_fromConstraints(n+1, True, enigme)
 # test_solver(enigme, n+1)
 
-
-
-# -----------------------------
-#"""
-
-# 
-# %% Test
-"""
-
-deb = time.monotonic()
-# n = 4
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-# n = 5
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-n = 6
-enigme = randomEnigma_fromConstraints(n, True)
-
-# n = 8
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-print('======>' , time.monotonic() - deb)
-
-rs = test_solver(enigme, n)
-
-"""
+from html_calisson import make_url
+print(make_url(enigme, n))
 
 # %%
-
-"""
-deb = time.monotonic()
-# n = 4
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-# n = 5
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
-# n = 5
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
-
 n = 6
-enigme = randomEnigma_fromConstraints_incremental(n, True)
+ng = 10
 
-# n = 8
-# enigme = randomEnigma_fromConstraints_incremental(n, True)
+start = time.monotonic()
+for i in range(ng):
+    enigme = randomEnigma_fromConstraints(n, trace = False)
+    # enigme = randomEnigma2(n, trace = True, easy=0)
+    # enigme = randomEnigma_fromConstraints_incremental(n, trace =True) 
+    print (f'énigme {i} générée')
+print(f"durée de la génération de {ng} énigmes de taille {n} : {time.monotonic()-start} s")
+start = time.monotonic()
+for i in range(ng):
+    # enigme = randomEnigma_fromConstraints(n, trace = True)
+    enigme = randomEnigma2(n, trace = False, easy=0)
+    # enigme = randomEnigma_fromConstraints_incremental(n, trace =True) 
+    print (f'énigme {i} générée')
+print(f"durée de la génération de {ng} énigmes de taille {n} : {time.monotonic()-start} s")
+start = time.monotonic()
+for i in range(ng):
+    # enigme = randomEnigma_fromConstraints(n, trace = True)
+    # enigme = randomEnigma2(n, trace = True, easy=0)
+    enigme = randomEnigma_fromConstraints_incremental(n, trace =False) 
+    print (f'énigme {i} générée')
+print(f"durée de la génération de {ng} énigmes de taille {n} : {time.monotonic()-start} s")
 
-print('======>' , time.monotonic() - deb)
-
-rs = test_solver(enigme, n)
-
-"""
-
-# %%
-"""
-deb = time.monotonic()
-
-n = 6
-enigme = randomEnigma(n, [], True)
-
-
-print('======>' , time.monotonic() - deb)
-
-rs = test_solver(enigme, n)
-
-"""
-
-# %% une taille 5 super jolie
-"""
-enigme = [(0, -2, 'x'),
- (2, -4, 'y'),
- (-1, 1, 'x'),
- (1, 1, 'y'),
- (-3, -1, 'y'),
- (1, -3, 'x'),
- (0, 4, 'x'),
- (-2, -4, 'x'),
- (0, 6, 'z'),
- (0, 0, 'y'),
- (3, 1, 'x'),
- (1, 3, 'z'),
- (-1, 5, 'y'),
- (-3, 1, 'x'),
- (-4, -2, 'z'),
- (4, -2, 'z'),
- (-1, -5, 'z'),
- (2, -2, 'y'),
- (-3, 3, 'x')]
-test_solver(enigme, 5)
-"""

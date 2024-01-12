@@ -6,8 +6,8 @@
 # Licence : CC BY-NC-SA 4.0 DEED
 # https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr
 # ============================================================================
-from calisson import projection, doSolve, encodeAxes
-from gen_calisson import encodage, encodeSolution
+# %%
+from calisson import projection, doSolve, encodeAxes, encodage, encodeSolution
 import os, webbrowser, re
 
 def make_tab_segments(taille=3):

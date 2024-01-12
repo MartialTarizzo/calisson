@@ -149,7 +149,7 @@ function rafraichit() {
 // recalcule toutes les grandeurs géométriques dans tabsegment et tabmilieu
 function miseajourpointencours() {
     cpt = 0;
-    console.log(taille)
+    // console.log(taille)
     //côté gauche avec diagonale verticale
     for (j = 0; j < 2 * taille; j++) {
 
@@ -411,7 +411,7 @@ function miseajourpoint(chaine) {
             }
         }
     }
-    console.log(tabmilieu)
+    // console.log(tabmilieu)
 }
 
 function commencergrille() {
@@ -749,7 +749,7 @@ function ajouterenleversegment(evt) {
                             } else {
                                 tabmilieu[i][2] = false;
                             }
-                            console.log(tabmilieu[i][2]);
+                            // console.log(tabmilieu[i][2]);
                         }
                         dessinerlafigure()
                         context.beginPath();
@@ -885,8 +885,8 @@ function chronoarret() {
 function testesolution() {
     var bool = true;
     var i = 0;
-    console.log(solution);
-    console.log(solution[i] + "==" + tabmilieu[i][2])
+    // console.log(solution);
+    // console.log(solution[i] + "==" + tabmilieu[i][2])
     while ((i < tabmilieu.length) && (bool)) {
         bool = (solution[i] == tabmilieu[i][2])
         i++;
@@ -940,7 +940,7 @@ function rafraichitlongueur() {
 
 // Associée au bouton de changement de mode pour interface tactile (arête/losange)
 function changemode() {
-    console.log(mode)
+    // console.log(mode)
     if (mode == "arete") {
         mode = "losange";
         document.getElementById("btmode").innerHTML = "Mode losange";

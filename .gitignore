@@ -5,3 +5,5 @@ bugs.py
 enigmathix/
 testMathix.py
 data/
+stats/
+solveLosanges.py

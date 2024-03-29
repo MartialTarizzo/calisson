@@ -12,6 +12,7 @@
 import math
 import random as rd
 import numpy as np
+import time
 
 from calisson import projection, doSolve, encodage, encodeSolution, encodeSolution3D, placeSommet, test_solver, draw_config
 
@@ -190,7 +191,7 @@ def randomEnigma(n, konfig = [], trace = False):
 # (la solution ne correspondra alors pas nécessairement à l'empilement de départ E1)
 # L'intérêt de la technique est de ne pas avoir à résoudre l'énigme pendant la première phase 
 # de placement des arêtes (on n'utilise que la fonction placeSommet, qui est rapide)
-def randomEnigma2(n, konfig = [], trace = False, easy = 0):
+def randomEnigma2(n, trace = False, easy = 0):
     # l'ensemble des extrémités des arêtes placée dans l'énigme
     node2DSet = set()
     # la liste des arêtes 2D rejetées lors de la première passe
@@ -405,7 +406,7 @@ def randomEnigma_fromConstraints_incremental(n, trace = False):
 # %% test
 """ 
 #--------- génération auto version 1 ----------
-"""
+
 import time
 
 #rd.seed(0)
@@ -426,8 +427,10 @@ M = test_solver(enigme, n)
 
 from html_calisson import make_url
 print(make_url(enigme, n))
+"""
 
 # %%
+"""
 n = 6
 ng = 10
 
@@ -453,3 +456,4 @@ for i in range(ng):
     print (f'énigme {i} générée')
 print(f"durée de la génération de {ng} énigmes de taille {n} : {time.monotonic()-start} s")
 
+"""

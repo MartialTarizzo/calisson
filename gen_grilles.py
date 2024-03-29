@@ -16,18 +16,17 @@ comme script dans la page HTML index.html (voir dossier testCalisson)
 """
 
 from gen_calisson import randomEnigma2
-from gen_calisson import randomEnigma_fromConstraints, randomEnigma_fromConstraints_incremental
+#from gen_calisson import randomEnigma_fromConstraints, randomEnigma_fromConstraints_incremental
 from html_calisson import make_url
 from calisson import doSolve
 import time
 
-import time
-def generate_grids(size, method, nenig, metric = False):
+def generate_grids(size, method, nenig, withExport = False, metric = False):
     """
     Génération d'un série d'énigmes sous la forme d'un fichier texte javascript prêt pour l'importation 
     args :
         size     # taille des énigmes
-        method   # méthode de génération
+        method   # niveau de facilité de l'énigme
         nenig    # nombre d'énigmes générées
     Écrit le fichier data/enigmes_{size}_{method}.js contenant les chaînes codant les énigmes générées.
     """
@@ -37,18 +36,22 @@ def generate_grids(size, method, nenig, metric = False):
     fullstart = time.monotonic()
     filename = f"data/enigmes_{size}_{method}.js"
     with open(filename, "w") as f:
-        f.write(f'let enigme_{size}_{method} = `\\')
+        if withExport:
+            f.write(f'export let enigme_{size}_{method} = `\\')
+        else:
+            f.write(f'let enigme_{size}_{method} = `\\')
         f.write("\n")
+
         for i in range(nenig):
             if metric:
                 start = time.monotonic()
             
             if method == 1:
-                enigme = randomEnigma2(size)
+                enigme = randomEnigma2(size, easy=10)
             elif method == 2:
-                enigme = randomEnigma_fromConstraints(size)
+                enigme = randomEnigma2(size, easy=5)
             elif method == 3:
-                enigme = randomEnigma_fromConstraints_incremental(size)
+                enigme = randomEnigma2(size, easy=0)
             
             if metric:
                 stop = time.monotonic()
@@ -71,6 +74,25 @@ def generate_grids(size, method, nenig, metric = False):
         return (fullstop-fullstart, ldur, lres)
     else:
         return (fullstop-fullstart)
+
+# %%
+# Génération de toutes les grilles "training"
+start = time.time()
+
+for s in [3,4,5,6]:
+    for meth in [1,2,3]:
+        generate_grids(s, meth, 100 , withExport = True)
+
+print(f"Génération terminée en {time.time() - start}")
+# %%
+# Génération de toutes les grilles "speedy"
+start = time.time()
+
+for s in [3,4,5,6]:
+    for meth in [1,2,3]:
+        generate_grids(s, meth, 220 - (s-3) * 40 , withExport = True)
+
+print(f"Génération terminée en {time.time() - start}")
 
 # %% Lancement de la génération
 """

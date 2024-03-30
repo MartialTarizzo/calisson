@@ -19,6 +19,10 @@ from gen_calisson import randomEnigma2
 #from gen_calisson import randomEnigma_fromConstraints, randomEnigma_fromConstraints_incremental
 from html_calisson import make_url
 from calisson import doSolve
+
+#  la fonction d'évaluation de la difficulté des grilles
+from evalLosanges import calcListLosAcuteFold
+
 import time
 
 def generate_grids(size, method, nenig, withExport = False, metric = False):
@@ -30,6 +34,40 @@ def generate_grids(size, method, nenig, withExport = False, metric = False):
         nenig    # nombre d'énigmes générées
     Écrit le fichier data/enigmes_{size}_{method}.js contenant les chaînes codant les énigmes générées.
     """
+
+    def makeEnigma(size, level):
+        # le dictionnaire des pourcentage de filtrage
+        dictP = {
+            (3, 1): (1, 1),
+            (4, 1): (1, 1),
+            (5, 1): (1, 1),
+            (6, 1): (1, 1),
+ 
+            (3, 2): (1/2, 1),
+            (4, 2): (1/2, 1),
+            (5, 2): (1/2, 1),
+            (6, 2): (1/2, 1),
+             
+            (3, 3): (0.1, 0.9),
+            (4, 3): (0.2, 0.8),
+            (5, 3): (0.0, 0.8),
+            (6, 3): (0.0, 0.6)
+        }
+        p1, p2 = dictP[(size, level)]
+        
+        while True:
+            if level == 1:
+                enigme = randomEnigma2(size, easy=10)
+            elif level == 2:
+                enigme = randomEnigma2(size, easy=5)
+            elif level == 3:
+                enigme = randomEnigma2(size, easy=0)
+            
+            p = len(calcListLosAcuteFold(enigme, size)) / (3 * size ** 2)
+            if p1 <= p <= p2:
+                return enigme
+
+    # pour le suivi des métriques des grilles
     if metric:
         ldur = []
         lres = []
@@ -45,13 +83,8 @@ def generate_grids(size, method, nenig, withExport = False, metric = False):
         for i in range(nenig):
             if metric:
                 start = time.monotonic()
-            
-            if method == 1:
-                enigme = randomEnigma2(size, easy=10)
-            elif method == 2:
-                enigme = randomEnigma2(size, easy=5)
-            elif method == 3:
-                enigme = randomEnigma2(size, easy=0)
+
+            enigme = makeEnigma(size, method)
             
             if metric:
                 stop = time.monotonic()

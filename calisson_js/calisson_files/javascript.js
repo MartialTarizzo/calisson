@@ -56,6 +56,8 @@ tabmilieu = []
 // false -> arête ne faisant pas partie de la solution
 solution = []; 
 
+historique = [];
+
 // modejeu est un drapeau permettant de savoir si on est mode jeu ou design
 modejeu = false;
 // la chaine contenue dans l'url contient-elle la solution ?
@@ -475,10 +477,28 @@ function commencergrille() {
     dessinerlafigure()
 }
 
+function back() {
+
+  if (historique.length < 1) return;
+
+  var v = historique.pop();
+
+  tabmilieu[v.indx][v.type] = v.prec; 
+
+  dessinerlafigure()
+  context.beginPath();
+  context.lineWidth = 1;
+  context.arc(tabmilieu[i][0], tabmilieu[i][1], 5, 0, 2 * Math.PI);
+  context.fillStyle = "black";
+  context.fill();
+  context.closePath();
+}
+
 // Associée au bouton 'Reset' : annule les actions de l'utilisateur
 function reset() {
     //chronoarret();
     chronofin = 0;
+    historique = [];
     for (i = 0; i < tabmilieu.length; i++) {
         {
             if (tabmilieu[i][2] == true) {
@@ -684,12 +704,16 @@ function ajouteunlosange(x, y) {
         if (Math.abs(x - tabmilieu[i][0]) < longueur / 5) {
             if (Math.abs(y - tabmilieu[i][1]) < longueur / 5) {
                 if (tabmilieu[i][2] != 'bloquee') {
+                    var etat = tabmilieu[i][4];
+
                     if ((!tabmilieu[i][4]) && (solutionpresente)) {
                         nblosangeutilise++;
                         document.getElementById('nblosange').innerHTML = nblosangeutilise;
                     }
                     tabmilieu[i][4] = !tabmilieu[i][4]
                     orientation = tabmilieu[i][3]
+
+                 historique.push( {'indx':i, 'type':4, 'prec':etat} );
                 }
 
             }
@@ -744,12 +768,15 @@ function ajouterenleversegment(evt) {
                     if (Math.abs(y - tabmilieu[i][1]) < longueur / 5) {
 
                         if (tabmilieu[i][2] != 'bloquee') {
+                            var etat = tabmilieu[i][2];
+
                             if (tabmilieu[i][2] != 'solution') {
                                 tabmilieu[i][2] = "solution"
                             } else {
                                 tabmilieu[i][2] = false;
                             }
                             // console.log(tabmilieu[i][2]);
+                            historique.push( {'indx':i, 'type':2, 'prec':etat} );
                         }
                         dessinerlafigure()
                         context.beginPath();
@@ -769,7 +796,11 @@ function ajouterenleversegment(evt) {
                         if (Math.abs(y - tabmilieu[i][1]) < longueur / 5) {
 
                             if (tabmilieu[i][2] != 'bloquee') {
+                                var etat = tabmilieu[i][2];
+
                                 tabmilieu[i][2] = !tabmilieu[i][2];
+
+                                historique.push( {'indx':i, 'type':2, 'prec':etat} );
                             }
                             dessinerlafigure()
                             context.beginPath();

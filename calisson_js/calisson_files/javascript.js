@@ -536,9 +536,11 @@ function termine() {
         document.getElementById('terminedl').style.display = "";
         document.getElementById('termine').innerHTML = "Reprendre ma grille";
         document.getElementById('btreset').style.display = "none";
+        document.getElementById('btback').style.display = 'none';
     } else {
         document.getElementById('terminedl').style.display = "none";
         document.getElementById('btreset').style.display = "";
+        document.getElementById('btback').style.display = "";
         document.getElementById('termine').innerHTML = "Ma grille est terminée";
     }
     contextbis.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, canvasbis.width, canvasbis.height);

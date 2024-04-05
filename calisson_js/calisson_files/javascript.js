@@ -486,12 +486,6 @@ function back() {
   tabmilieu[v.indx][v.type] = v.prec; 
 
   dessinerlafigure()
-  context.beginPath();
-  context.lineWidth = 1;
-  context.arc(tabmilieu[i][0], tabmilieu[i][1], 5, 0, 2 * Math.PI);
-  context.fillStyle = "black";
-  context.fill();
-  context.closePath();
 }
 
 // Associée au bouton 'Reset' : annule les actions de l'utilisateur

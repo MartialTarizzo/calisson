@@ -93,6 +93,11 @@ def sharpAngle(a1, a2):
     """
     (x1, y1, d1) = a1
     (x2, y2, d2) = a2
+    
+    # on ne travaille que si les arêtes sont suffisamment proches
+    if (abs(x2 - x1) > 1) or (abs(y2 - y1) > 2):
+        return False
+    
     if d1 == "x":
         if x2 == x1 - 1 and y2 == y1 - 1 and d2 == "y":
             return True

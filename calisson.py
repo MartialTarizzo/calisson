@@ -328,9 +328,12 @@ def listCoord3D(X, Y, n):
 #   Ex : "x" -> arête dans la direction x
 #
 #   En projection, ça ressemble donc à une étoile Mercedes
+#     z
 #     |
 #   (X,Y)
 #   /   \
+#  x     y
+#
 # L'énigme de la fin de la page
 # https://mathix.org/calisson/blog/index.php?static2/regle
 # est donc codée ainsi :
@@ -340,10 +343,10 @@ def listCoord3D(X, Y, n):
 # --------------------------
 # 2.2 : encodage sous forme concrète
 # --------------------------
-"""
-idée : reprendre le code de dessin, mais encoder concrètement les arêtes
-sous la forme précédente plutôt que de les dessiner.
-"""
+# 
+# idée : reprendre le code de dessin, mais encoder concrètement les arêtes
+# sous la forme précédente plutôt que de les dessiner.
+# 
 # encodage d'un petit cube de coordonnées 3D [i,j,k]
 # On tient compte de l'environnement du cube pour n'encoder que les arêtes
 # nécessaires.
@@ -574,7 +577,7 @@ def placeSommet(xs, ys, zs, d, M):
             Mp[xs:, ys-1, zs:] = 0
 
         # pour une arête interne, les cubes symétriques / à l'arête et au plan
-        # orthogonal au vecteur (1,1,0) doivent être de même nature
+        # défini par l'arête et le vecteur (1,1,0) doivent être de même nature
         if 0 < xs < n and 0 < ys < n and zs < n:
             Mp[xs-1, ys, zs] = Mp[xs, ys-1,
                                     zs] = max(Mp[xs-1, ys, zs], Mp[xs, ys-1, zs])

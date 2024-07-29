@@ -17,7 +17,7 @@ Les fonctions contenues dans ces fichiers ne permettent pas l'interactivité fou
 - lancer l'interface de résolution d'une énigme sur le site mathix 
 
 ## Les différents fichiers
-Seuls les fichiers python (*.py) sont intéressants à télécharger, afin de pouvoir les exécuter dans son nvironnement de développement favori.
+Seuls les fichiers python (*.py) sont intéressants à télécharger, afin de pouvoir les exécuter dans son environnement de développement favori.
 - calisson.py : contient les fonctions de représentation graphique ainsi que celles permettant la résolution d'une énigme
 - gen_calisson.py : contient les fonctions permettant la génération automatique (et aléatoire) d'un empilement ainsi que d'une énigme
 - html_calisson : contient les fonctions d'interfaçage avec mathix.org (récupération d'une énigme présente sur le site et résolution, lancement du site sur une énigme générée localement pour une résolution manuelle)

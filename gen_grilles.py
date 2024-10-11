@@ -25,7 +25,7 @@ from evalLosanges import calcListLosAcuteFold
 
 import time
 
-def generate_grids(size, method, nenig, withExport=False, metric=False, subDir=''):
+def generate_grids(size, method, nenig, withExport=False, metric=False, subDir='', ext='js'):
     """
     Génération d'un série d'énigmes sous la forme d'un fichier texte javascript prêt pour l'importation 
     args :
@@ -92,9 +92,9 @@ def generate_grids(size, method, nenig, withExport=False, metric=False, subDir='
     
     fullstart = time.monotonic()
     if subDir == '':
-        filename = f"data/enigmes_{size}_{method}.js"
+        filename = f"data/enigmes_{size}_{method}.{ext}"
     else:
-        filename = f"data/{subDir}/enigmes_{size}_{method}.js"
+        filename = f"data/{subDir}/enigmes_{size}_{method}.{ext}"
     
     with open(filename, "w", encoding='UTF-8') as f:
         if withExport:
@@ -137,7 +137,7 @@ start = time.time()
 
 for s in [3,4,5,6]:
     for meth in [1,2,3]:
-        generate_grids(s, meth, 100 , withExport=True, subDir='training')
+        generate_grids(s, meth, 100 , withExport=True, subDir='training', ext='3.js')
 
 print(f"Génération terminée en {time.time() - start}")
 # %%
@@ -146,7 +146,7 @@ start = time.time()
 
 for s in [3,4,5,6]:
     for meth in [1,2,3]:
-        generate_grids(s, meth, 220 - (s-3) * 40 , withExport = True, subDir='speedy')
+        generate_grids(s, meth, 220 - (s-3) * 40 , withExport = True, subDir='speedy', ext='3.js')
 
 print(f"Génération terminée en {time.time() - start}")
 

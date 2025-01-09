@@ -27,13 +27,11 @@ from calisson import (
 
 # %% Section 1 : génération d'un empilement
 # --------------------------------------------
-"""
-représentation de l'empilement des petits cubes dans un grand cube de côté n :
-liste de n**2 élements, représentant le nombre de petits cubes empilés
-au dessus du carré de coordonnées (i,j) dans le plan horizontal.
-L'index du carré (i,j) dans la liste est i * n + j , i=0..n-1, j=0..n-1
-le carré (0,0) est le plus éloigné de l'observateur, base i,j,k directe
-"""
+# représentation de l'empilement des petits cubes dans un grand cube de côté n :
+# liste de n**2 élements, représentant le nombre de petits cubes empilés
+# au dessus du carré de coordonnées (i,j) dans le plan horizontal.
+# L'index du carré (i,j) dans la liste est i * n + j , i=0..n-1, j=0..n-1
+# le carré (0,0) est le plus éloigné de l'observateur, base i,j,k directe
 
 
 # génération d'une configuration contenant nbCubes dans un grand cube de côté n
@@ -65,8 +63,6 @@ def make_config(n, nbCubes):
                     else:
                         ok = hok and iok and jok
                 if ok:
-                    # newk = k.copy()
-                    # newk[i * n + j] = newk[i * n + j] + 1
                     l.append(i * n + j)
         return l
 
@@ -81,16 +77,51 @@ def make_config(n, nbCubes):
 
 
 # génération version 2
-# à commenter
-def make_config(n, nbCubes):
-    # le jeu, vide de tout cube
+def make_config2(n, nbCubes):
+    """
+        pour avoir une génération d'empilement plus efficace et plus rapide, on va
+        procéder autrement : on imagine qu'on laisse tomber un petit cube au dessus
+        du plan horizontal (comme dans la vidéo de la page d'infos de SpeedyCalisson)
+        aux coordonnées (i,j), i et j dans [1..n], (i,j) étant tirés au hasard.
+        deux possibilités se présentent :
+        1- le cube tombe sur une colonne déjà entièrement remplie avec n cubes.
+        on le déplace alors vers l'extérieur jusqu'à se retrouver au dessus d'une
+        colonne non entièrement remplie, ce qui fait qu'on se trouve dans la situation
+        qui suit...
+        2- le cube tombe sur une colonne contenant moins de n cubes.
+        on le fait alors "glisser" vers l'origine du grand cube en gardant la même altitude.
+
+        Comparée à la méthode précédente (make_config), c'est beaucoup plus rapide,
+        mais ne donne pas tout à fait la même répartition de petits cubes dans le grand cube.
+        Il y en a un petit moins près des murs, et un peu plus au centre
+    Args:
+        n (int): taille du cube
+        nbCubes (int): nombre de petits cubes à placer
+
+    Returns:
+        (list, f) : paire du même type que pour la fonction make_config précédente
+    """
+    # Les indices maximaux pour le tirage au sort de la position de chute du petit cube
+    imax = 1
+    jmax = 1
+
+    # retourne le jeu, vide de tout cube, sous la forme d'une matrice numpy de dimension 2
+    # pour éviter des test de bord, les coordonnées des carrés dans le plan horizontal
+    # sont dans [1..n]. Les plans i=0 et j=0 sont des "murs", remplis de petits cubes
+    # qui seront éliminés à la fin du calcul
     def kVide(n):
-        k = np.zeros([n + 1, n + 1], dtype=np.uint8)
+        k = np.zeros([n + 1, n + 1], dtype=np.uint16)
+        # les murs i=0 et j=0
         k[0, :] = n + 1
         k[:, 0] = n + 1
         return k
 
+    # ajoute un cube à la configuration k
     def ajouteCube(k, n):
+        nonlocal imax, jmax
+
+        # fait glisser le petit cube tombé au dessus du carré de coordonnées (i,j)
+        # vers le mur (i==0) du fond du grand cube en modifiant la configuration k
         def glisse_i(i, j):
             ii = i
             while k[ii - 1, j] < k[ii, j]:
@@ -99,6 +130,8 @@ def make_config(n, nbCubes):
                 ii -= 1
             return (ii, j)
 
+        # fait glisser le petit cube tombé au dessus du carré de coordonnées (i,j)
+        # vers le mur (j==0) du fond du grand cube en modifiant la configuration k
         def glisse_j(i, j):
             jj = j
             while k[i, jj - 1] < k[i, jj]:
@@ -107,30 +140,54 @@ def make_config(n, nbCubes):
                 jj -= 1
             return (i, jj)
 
-        i = rd.randint(1, n)
-        j = rd.randint(1, n)
+        # tirage au sort de la position de chute du petit cube
+        i = rd.randint(1, imax)
+        j = rd.randint(1, jmax)
 
-        while k[i, j] == n:
-            if (i < n) and (rd.random() < 0.5):
-                i = min(i + 1, n)
-            else:
-                j = min(j + 1, n)
-
-        k[i, j] += 1
+        # si le cube tombe au dessus d'une coonne entièrement remplie, on le déplace
+        # vers l'extérieur (i croissant, j croissant) jusqu'à se retrouver au dessus
+        # d'une colonne incomplète.
+        # on tire au sort pour décider si le déplacement du cube se fait d'abord selon
+        # i ou selon j
         if rd.random() < 0.5:
-            (ii, jj) = glisse_j(i, j)
-            glisse_i(ii, jj)
+            # déplacement selon i en premier
+            while k[i, j] == n:
+                if i < n:
+                    i = min(i + 1, n)
+                else:
+                    j = min(j + 1, n)
         else:
-            (ii, jj) = glisse_i(i, j)
-            glisse_j(ii, jj)
+            # déplacement selon j en premier
+            while k[i, j] == n:
+                if j < n:
+                    j = min(j + 1, n)
+                else:
+                    i = min(i + 1, n)
 
+        # on est maintenant au dessus d'une colonne non remplie
+        #  MAJ de la configuraton
+        k[i, j] += 1
+
+        # glissement du cube vers les murs du fond, avec MAJ de la configuration
+        if rd.random() < 0.5:
+            # d'abord j décroissant, puis i décroissant
+            (ii, jj) = glisse_j(i, j)
+            (ii, jj) = glisse_i(ii, jj)
+        else:
+            # d'abord i décroissant, puis j décroissant
+            (ii, jj) = glisse_i(i, j)
+            (ii, jj) = glisse_j(ii, jj)
+
+        # MAJ de la zone de tirage au sort de la position du prochain petit cube
+        imax = min(max(imax, ii + 1), n)
+        jmax = min(max(jmax, jj + 1), n)
+
+    # Création de la configuration, et ajout des cubes
     k = kVide(n)
     for _ in range(nbCubes):
         ajouteCube(k, n)
+    # retrait des murs (i=0, j=0) et mise en forme du résultat identique à make_config
     return (list(k[1:, 1:].reshape((n**2,))), 0)
-
-
-##########################
 
 
 # La représentation précédente (matrice n x n) de l'empilement est commode pour le générer,
@@ -165,7 +222,7 @@ def make_random_config(n, nbCubes=0, trace=False):
         if trace:
             print(f"on a {nbCubes} cubes dans la configuration")
 
-    k, f = make_config(n, nbCubes)
+    k, f = make_config2(n, nbCubes)
     if trace:
         print(k, f)
     return k

@@ -137,7 +137,7 @@ start = time.time()
 
 for s in [3,4,5,6]:
     for meth in [1,2,3]:
-        generate_grids(s, meth, 100 , withExport=True, subDir='training', ext='3.js')
+        generate_grids(s, meth, 100 , withExport=True, subDir='training', ext='4.js')
 
 print(f"Génération terminée en {time.time() - start}")
 # %%
@@ -146,7 +146,7 @@ start = time.time()
 
 for s in [3,4,5,6]:
     for meth in [1,2,3]:
-        generate_grids(s, meth, 220 - (s-3) * 40 , withExport = True, subDir='speedy', ext='3.js')
+        generate_grids(s, meth, 220 - (s-3) * 40 , withExport = True, subDir='speedy', ext='4.js')
 
 print(f"Génération terminée en {time.time() - start}")
 

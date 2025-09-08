@@ -218,7 +218,7 @@ def make_random_config(n, nbCubes=0, trace=False):
     """
     # nombre de cubes dans la configuration, tiré au hasard entre deux bornes si non fourni
     if nbCubes == 0:
-        nbCubes = rd.randint(3 * n**3 // 10, 6 * n**3 // 10)  # bornes à ajuster
+        nbCubes = rd.randint(2 * n**3 // 10, 8 * n**3 // 10)  # bornes à ajuster
         if trace:
             print(f"on a {nbCubes} cubes dans la configuration")
 

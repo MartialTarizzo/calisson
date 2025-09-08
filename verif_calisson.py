@@ -93,7 +93,7 @@ import webbrowser
 prefBrowser = 'Safari' # ou 'Chrome', 'Firefox'
 
 # répertoire de travail
-localDir = '/Users/martial/Desktop/calisson/calisson_js/'
+localDir = '/Users/martial/Desktop/calisson-Co/calisson/calisson_js/'
 # -----------------------------
 
 # pour travailler localement, sans accès internet

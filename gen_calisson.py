@@ -559,7 +559,7 @@ def randomEnigma_fromConstraints_incremental(n, trace=False):
 import time
 
 #rd.seed(0)
-n = 5
+n = 3
 start = time.monotonic()
 # enigme = randomEnigma_fromConstraints(n, trace = True)
 enigme = randomEnigma2(n, trace = True, easy=0)
@@ -568,7 +568,7 @@ enigme = randomEnigma2(n, trace = True, easy=0)
 print(f"durée de la génération d'une énigme de taille {n} : {time.monotonic()-start} s")
 # recherche de la solution de l'énigme
 from calisson import test_solver
-M = test_solver(enigme, n)
+M = test_solver(enigme, n, withAxis=False, file='test.pdf')
 
 # test_solver(enigme, n+1)
 # enigme = randomEnigma_fromConstraints(n+1, True, enigme)

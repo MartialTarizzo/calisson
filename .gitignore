@@ -11,3 +11,4 @@ solveLosanges.py
 calisson.code-workspace
 test new_make_config.py
 test_make_config2.ipynb
+*.pdf

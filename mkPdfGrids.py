@@ -1,11 +1,46 @@
-#%%
+# %% mkPdfGrids.py 
+# Ce fichier est destiné à la production de grilles à imprimer pour le jeu du calisson
+
+# La fonction utile est makePdfPages, située à la fin du fichier.
+
+# Toutes les fonctions qui précèdent sont des adaptations de fonctions équivalentes (voire identiques)
+# situées dans d'autres fichiers.
+# Elles ont en général subi de légères modifications pour générer une sortie matplotlib dans un subplot 
+# plutôt que le plot entier.
+
+
+#%% Les importations système
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
+#%% les importations de génération d'énigme et de résolution
+
+from gen_calisson import randomEnigma2
+from evalLosanges import calcListLosAcuteFold
+
+from calisson import doSolve
+
+#%% Reprise du code contenu dans calisson.py
+# argument ax ajouté si nécessaire pour dessiner dans un subplot
+
+# Les couleurs
+
+# 1) pour les tracés de lignes
 color_enigme = "black"
+color_grid = "gray"
 color_solution = "red"
 color_indet = "gray"
+
+# 2) pour le coloriage des losanges
+color_poly_xy = "aqua"  # losange horizontal
+color_poly_xz = "pink"  # losange incliné vers la droite
+color_poly_yz = "khaki"  # losange incliné vers la gauche
+
+color_poly_xy = "yellow"  # losange horizontal
+color_poly_xz = "cyan"  # losange incliné vers la droite
+color_poly_yz = "magenta"  # losange incliné vers la gauche
+
 
 
 # Deux utilitaires
@@ -39,20 +74,21 @@ def lineproj(ax, A, B, **kwargs):
     Bp = projection(B)
     line(ax, Ap, Bp, **kwargs)
 
+
 # dessin de l'aire de jeu
 def drawHex(ax, n):
     """tracé de l'hexagone qui représente la projection du grand cube
     de rangement"""
 
     # les lignes intérieures
-    opt = {"color": color_enigme, "linestyle": "dashed", "linewidth": 1}
+    opt = {"color": color_grid, "linestyle": "dashed", "linewidth": 1}
     for i in range(n + 1):
-        lineproj(ax, [-n+i, 0, i], [n, 0, i], **opt)
-        lineproj(ax, [0, -n+i, i], [0, n, i], **opt)
-        lineproj(ax, [i, -n+i, 0], [i, n, 0], **opt)
-        lineproj(ax, [-n+i, i, 0], [n, i, 0], **opt)
-        lineproj(ax, [i, 0, -n+i], [i, 0, n], **opt)
-        lineproj(ax, [0, i, -n+i], [0, i, n], **opt)
+        lineproj(ax, [-n + i, 0, i], [n, 0, i], **opt)
+        lineproj(ax, [0, -n + i, i], [0, n, i], **opt)
+        lineproj(ax, [i, -n + i, 0], [i, n, 0], **opt)
+        lineproj(ax, [-n + i, i, 0], [n, i, 0], **opt)
+        lineproj(ax, [i, 0, -n + i], [i, 0, n], **opt)
+        lineproj(ax, [0, i, -n + i], [0, i, n], **opt)
     # le bord
     opt = {"color": color_enigme, "linewidth": 2}
 
@@ -62,6 +98,7 @@ def drawHex(ax, n):
     lineproj(ax, [n, n, 0], [0, n, 0], **opt)
     lineproj(ax, [0, n, 0], [0, n, n], **opt)
     lineproj(ax, [0, n, n], [0, 0, n], **opt)
+
 
 def draw_enigma(ax, e):
     opt_enig = {"color": color_enigme, "linewidth": 3}
@@ -74,13 +111,9 @@ def draw_enigma(ax, e):
             line(ax, [x0, y0], [x0 + 1, y0 - 1], **opt_enig)
         if "z" == d:
             line(ax, [x0, y0], [x0, y0 + 2], **opt_enig)
-# %%
-# Le dessin des calissons : losanges remplis selon les trois couleurs suivantes
-color_poly_xy = "aqua"  # losange horizontal
-color_poly_xz = "pink"  # losange incliné vers la droite
-color_poly_yz = "khaki"  # losange incliné vers la gauche
 
 
+# Le dessin des calissons : losanges remplis selon les trois couleurs color_poly...
 def drawPolygons(ax, jeu):
     """
     jeu est la matrice 3D représentant l'empilement des cubes
@@ -236,6 +269,7 @@ def projCube(ax, jeu, i, j, k):
         lineproj(ax, S5, S6, **opt_indet)
         lineproj(ax, S6, S7, **opt_indet)
 
+
 # dessin des axes non masqués par des cubes
 def drawAxes(ax, jeu):
     """
@@ -265,69 +299,145 @@ def draw_config(ax, jeu):
         for j in range(n):
             for k in range(n):
                 projCube(ax, jeu, i, j, k)
-#%%
-from gen_calisson import randomEnigma2
 
-from calisson import doSolve
 
-# la taille des grilles
-tailleGrille = 5
-# Le nombre de grilles par page
-nPageGrids = 6
-# La liste des énigmes
-l_enigmes = [randomEnigma2(tailleGrille, trace = True, easy=0) for _ in range(nPageGrids)]
-# La liste des solutions associées
-l_solutions = [doSolve(enigme, tailleGrille, False)[0] for enigme in l_enigmes]
 
-print('Grilles et solutions calculées')
 
-# Instantiating PDF document
-pdf = PdfPages("Sample_file.pdf")
+#%% Reprise du code contenu dans gen_grilles.py
 
-print('Création de la page des énigmes')
-idxGrid = 0
+# la fonction suivante est initialement une fonction interne
+# de la fonction generate_grids (dans gen_grilles.py)
+# Présente ici comme fonction globale.
 
-nc, nl = 2,3
-plt.rcParams['figure.constrained_layout.use'] = True
+def makeEnigma(size, level):
+    # le dictionnaire des pourcentage de filtrage 
+    # pour l'évaluation de la difficulté des grilles en fonction
+    # de la proportion "p" d'arêtes trouvables par angle aigu/pli
 
-fig, axs = plt.subplots(ncols=nc, nrows=nl, figsize=(21/2.54, 29.7/2.54) )
+    # Pour une grille (taille, niveau), la grille sera retenue
+    # si "p" est dans l'intervalle correspondant.
+    # Par exemple, une grille de taille 4 et de niveau 3 sera retenue 
+    # si 0.2 <= p <= 0.8
+    # Les bornes du tableau qui suit sont issus d'une étude statistique
+    # portant sur plusieurs dizaines de grilles de chaque type.
+    dictP = {
+        (3, 1): (1, 1),
+        (4, 1): (1, 1),
+        (5, 1): (1, 1),
+        (6, 1): (1, 1),
 
-for row in range(nl):
-    for col in range(nc):
+        (3, 2): (1/2, 1),
+        (4, 2): (1/2, 1),
+        (5, 2): (1/2, 1),
+        (6, 2): (1/2, 1),
+            
+        (3, 3): (0.1, 0.9),
+        (4, 3): (0.2, 0.8),
+        (5, 3): (0.0, 0.8),
+        (6, 3): (0.0, 0.6)
+    }
 
-        drawHex(axs[row, col],tailleGrille)
-        draw_enigma(axs[row, col], l_enigmes[idxGrid])
-        axs[row, col].axis("off")
-        axs[row, col].set_aspect(1 / np.sqrt(3))
-        axs[row, col].set_xlabel(f'axs[{row}, {col}]')
-        axs[row, col].set_title(f'grille {idxGrid+1}')
+    # Les bornes de l'évaluation de la difficulté de la grille
+    p1, p2 = dictP[(size, level)]
+    
+    while True:
+        if level == 1:
+            enigme = randomEnigma2(size, easy=10)
+        elif level == 2:
+            enigme = randomEnigma2(size, easy=5)
+        elif level == 3:
+            enigme = randomEnigma2(size, easy=0)
+        
+        # évaluation de la difficulté de la grille
+        p = len(calcListLosAcuteFold(enigme, size)) / (3 * size ** 2)
+        if p1 <= p <= p2:
+            # énigme retenue !
+            return enigme
 
-        idxGrid += 1
-fig.suptitle(f'Niveau : {tailleGrille}')
-pdf.savefig(fig)
 
-print('Création de la page des solutions')
+# %% La fonction de fabrication des fichiers PDF
+def makePdfPages(racineNomFichier, nPages=1, tailleGrille=4, niveau=1):
+    """Fabrique dans le répertoire courant un fichier PDF contenant
+    des énigmes et leurs solutions pour le jeu du calisson.
+    Il y a 6 énigmes par page. Les pages des énigmes précèdent les pages des solutions.
 
-idxGrid = 0
+    Args:
+        racineNomFichier (string): début du nom de fichier généré
+        nPages (int, optional): nombre de pages d'énigmes (6énigmes par page). 
+        Defaults to 1.
+        tailleGrille (int, optional): taille des grilles générées. Defaults to 4.
+        niveau (int, optional): niveau des grilles. Defaults to 1.
+    """
+    # Le nombre de grilles par page
+    nPageGrids = 6
 
-nc, nl = 2,3
-plt.rcParams['figure.constrained_layout.use'] = True
-fig, axs = plt.subplots(ncols=nc, nrows=nl, figsize=(21/2.54, 29.7/2.54) )
+    print(f'Génération des énigmes {tailleGrille}.{niveau}')
+    # La liste des énigmes
+    l_enigmes = [
+        makeEnigma(tailleGrille, niveau)
+        for _ in range(nPageGrids * nPages)
+    ]
+    # La liste des solutions associées
+    l_solutions = [doSolve(enigme, tailleGrille, False)[0] for enigme in l_enigmes]
 
-for row in range(nl):
-    for col in range(nc):
+    print("Grilles et solutions calculées")
 
-        # drawHex(axs[row, col],tailleGrille)
-        draw_config(axs[row, col], l_solutions[idxGrid])
-        draw_enigma(axs[row, col], l_enigmes[idxGrid])
-        axs[row, col].axis("off")
-        axs[row, col].set_aspect(1 / np.sqrt(3))
-        axs[row, col].set_xlabel(f'axs[{row}, {col}]')
-        axs[row, col].set_title(f'grille {idxGrid+1}')
+    # Instantiating PDF document
+    pdf = PdfPages(f"{racineNomFichier}_{6 * nPages}_{tailleGrille}.{niveau}.pdf")
 
-        idxGrid += 1
-fig.suptitle(f'Solutions niveau : {tailleGrille}')
-pdf.savefig(fig)
+    print("Création des pages des énigmes")
+    idxGrid = 0
+    nc, nl = 2, 3
+    plt.rcParams["figure.constrained_layout.use"] = True
 
-pdf.close()
-# %%
+    for idxPage in range(nPages):
+        fig, axs = plt.subplots(ncols=nc, nrows=nl, figsize=(21 / 2.54, 29.7 / 2.54))
+
+        for row in range(nl):
+            for col in range(nc):
+                drawHex(axs[row, col], tailleGrille)
+                draw_enigma(axs[row, col], l_enigmes[idxGrid])
+                axs[row, col].axis("off")
+                axs[row, col].set_aspect(1 / np.sqrt(3))
+                axs[row, col].set_title(f"grille {idxGrid+1}")
+
+                idxGrid += 1
+        fig.suptitle(f"Grilles de taille {tailleGrille}, niveau {niveau}")
+        pdf.savefig(fig)
+        plt.close()
+        print(f'page {idxPage + 1}')
+
+    print("Création des pages des solutions")
+
+    idxGrid = 0
+
+    # nc, nl = 2, 3
+    # plt.rcParams["figure.constrained_layout.use"] = True
+    for idxPage in range(nPages):
+        fig, axs = plt.subplots(ncols=nc, nrows=nl, figsize=(21 / 2.54, 29.7 / 2.54))
+
+        for row in range(nl):
+            for col in range(nc):
+
+                draw_config(axs[row, col], l_solutions[idxGrid])
+                draw_enigma(axs[row, col], l_enigmes[idxGrid])
+                axs[row, col].axis("off")
+                axs[row, col].set_aspect(1 / np.sqrt(3))
+                axs[row, col].set_title(f"grille {idxGrid+1}")
+
+                idxGrid += 1
+        fig.suptitle(f"Solutions des grilles de taille {tailleGrille}, niveau {niveau}")
+        pdf.savefig(fig)
+        plt.close()
+        print(f'page {nPages + idxPage + 1}')
+
+    pdf.close()
+    print(f'Fin de création du fichier {racineNomFichier}_{6 * nPages}_{tailleGrille}.{niveau}.pdf')
+
+# %% pour tester
+makePdfPages("GrillesCalisson", nPages=4, tailleGrille=3, niveau=3)
+
+# %% génération de 12 énigmes (2 pages d'énigmes) pour toutes les tailles/niveaux
+for taille in [3,4, 5, 6]:
+    for niveau in [1, 2, 3]:
+        makePdfPages("GrillesCalisson", nPages=2, tailleGrille=taille, niveau=niveau)

@@ -33,10 +33,13 @@ color_solution = "red"
 color_indet = "gray"
 
 # 2) pour le coloriage des losanges
-color_poly_xy = "aqua"  # losange horizontal
-color_poly_xz = "pink"  # losange incliné vers la droite
-color_poly_yz = "khaki"  # losange incliné vers la gauche
 
+# Plutôt pour écran
+# color_poly_xy = "aqua"  # losange horizontal
+# color_poly_xz = "pink"  # losange incliné vers la droite
+# color_poly_yz = "khaki"  # losange incliné vers la gauche
+
+# Plutôt pour impression
 color_poly_xy = "yellow"  # losange horizontal
 color_poly_xz = "cyan"  # losange incliné vers la droite
 color_poly_yz = "magenta"  # losange incliné vers la gauche

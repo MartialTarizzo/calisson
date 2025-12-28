@@ -398,14 +398,16 @@ def makePdfPages(racineNomFichier, nPages=1, tailleGrille=4, niveau=1):
 
         for row in range(nl):
             for col in range(nc):
-                drawHex(axs[row, col], tailleGrille)
-                draw_enigma(axs[row, col], l_enigmes[idxGrid])
-                axs[row, col].axis("off")
-                axs[row, col].set_aspect(1 / np.sqrt(3))
-                axs[row, col].set_title(f"grille {idxGrid+1}")
+                ax = axs[row, col]
+                drawHex(ax, tailleGrille)
+                draw_enigma(ax, l_enigmes[idxGrid])
+                ax.set_aspect(1 / np.sqrt(3))
+                ax.set_title(f"grille {idxGrid+1}")
 
+                ax.axis("off")
                 idxGrid += 1
-        fig.suptitle(f"Grilles de taille {tailleGrille}, niveau {niveau}")
+
+        fig.suptitle(f"Grilles de taille {tailleGrille}, niveau {niveau} - Page {idxPage+1}/{2*nPages}")
         pdf.savefig(fig)
         plt.close()
         print(f'page {idxPage + 1}')
@@ -421,15 +423,15 @@ def makePdfPages(racineNomFichier, nPages=1, tailleGrille=4, niveau=1):
 
         for row in range(nl):
             for col in range(nc):
+                ax = axs[row, col]
+                draw_config(ax, l_solutions[idxGrid])
+                draw_enigma(ax, l_enigmes[idxGrid])
+                ax.set_aspect(1 / np.sqrt(3))
+                ax.set_title(f"grille {idxGrid+1}")
 
-                draw_config(axs[row, col], l_solutions[idxGrid])
-                draw_enigma(axs[row, col], l_enigmes[idxGrid])
-                axs[row, col].axis("off")
-                axs[row, col].set_aspect(1 / np.sqrt(3))
-                axs[row, col].set_title(f"grille {idxGrid+1}")
-
+                ax.axis("off")
                 idxGrid += 1
-        fig.suptitle(f"Solutions des grilles de taille {tailleGrille}, niveau {niveau}")
+        fig.suptitle(f"Solutions des grilles de taille {tailleGrille}, niveau {niveau} - Page {nPages+idxPage+1}/{2*nPages}")
         pdf.savefig(fig)
         plt.close()
         print(f'page {nPages + idxPage + 1}')
@@ -438,9 +440,17 @@ def makePdfPages(racineNomFichier, nPages=1, tailleGrille=4, niveau=1):
     print(f'Fin de création du fichier {racineNomFichier}_{6 * nPages}_{tailleGrille}.{niveau}.pdf')
 
 # %% pour tester
-makePdfPages("GrillesCalisson", nPages=4, tailleGrille=3, niveau=3)
+makePdfPages("PDFgrids/GrillesCalisson", nPages=1, tailleGrille=5, niveau=2)
 
 # %% génération de 12 énigmes (2 pages d'énigmes) pour toutes les tailles/niveaux
+import time
+
+start = time.monotonic()
+
 for taille in [3,4, 5, 6]:
     for niveau in [1, 2, 3]:
-        makePdfPages("GrillesCalisson", nPages=2, tailleGrille=taille, niveau=niveau)
+        makePdfPages("PDFgrids/GrillesCalisson", nPages=2, tailleGrille=taille, niveau=niveau)
+
+print(f'fin de génération de tous les fichiers au bout de {time.monotonic()-start} s')
+
+# %%
